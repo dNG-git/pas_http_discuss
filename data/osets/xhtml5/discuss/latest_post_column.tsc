@@ -1,0 +1,8 @@
+[if:content:latest_timestamp != -1]
+[if:content:latest_preview != ]
+[rewrite:safe_content]latest_preview[/rewrite]<br /><br />
+[/if]
+<small>[rewrite:l10n]pas_http_discuss_latest_post_1[/rewrite]<strong>[rewrite:timestamp:date_time_short]latest_timestamp[/rewrite]</strong>[rewrite:l10n]pas_http_discuss_latest_post_2[/rewrite][rewrite:user_linked]latest_author_id[/rewrite][rewrite:l10n]pas_http_discuss_latest_post_3[/rewrite]</small>
+[/if][if:content:latest_timestamp == -1]
+<small><b>[rewrite:l10n]pas_http_discuss_latest_post_empty[/rewrite]</b></small>
+[/if]

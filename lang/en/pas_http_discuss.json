@@ -1,0 +1,39 @@
+{
+ "pas_http_discuss_last_post_empty": "Without preview",
+ "pas_http_discuss_latest_post": "Latest post",
+ "pas_http_discuss_latest_post_empty": "So far without posts",
+ "pas_http_discuss_list": "List",
+ "pas_http_discuss_list_empty": "Currently no topics have been published for this list.",
+ "pas_http_discuss_posts": "Posts",
+ "pas_http_discuss_topic": "Topic",
+ "pas_http_discuss_topics": "Topics",
+
+ "pas_http_discuss_latest_post_1": "Latest post on ",
+ "pas_http_discuss_latest_post_2": " by ",
+ "pas_http_discuss_latest_post_3": ".",
+
+ "pas_http_discuss_list_manage": "Manage list",
+ "pas_http_discuss_done_list_manage": "The list has been changed successfully.",
+
+ "pas_http_discuss_post_edit": "Edit post",
+ "pas_http_discuss_done_post_edit": "The post has been edited successfully.",
+
+ "pas_http_discuss_post_new": "Add post",
+ "pas_http_discuss_done_post_new": "The post has been added successfully.",
+
+ "pas_http_discuss_topic_edit": "Edit topic",
+ "pas_http_discuss_done_topic_edit": "The topic has been edited successfully.",
+
+ "pas_http_discuss_topic_new": "Add topic",
+ "pas_http_discuss_done_topic_new": "The topic has been added successfully.",
+
+ "pas_http_discuss_post_content": "Content",
+ "pas_http_discuss_post_title": "Title",
+ "pas_http_discuss_topic_title": "Title",
+ "pas_http_discuss_topic_description": "Summary",
+ "pas_http_discuss_topic_tag": "Unique tag",
+
+ "errors_pas_http_discuss_lid_invalid": "The defined list ID is invalid.",
+ "errors_pas_http_discuss_pid_invalid": "The defined post ID is invalid.",
+ "errors_pas_http_discuss_tid_invalid": "The defined topic ID is invalid."
+}

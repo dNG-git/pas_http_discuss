@@ -1,0 +1,4 @@
+<h2>[link:params:m=discuss:dsd=dtid+[rewrite:content]id[/rewrite]][rewrite:content]title[/rewrite][/link]</h2>
+[if:content:description != ]
+<p>[rewrite:formtags_content]description[/rewrite]</p>
+[/if]

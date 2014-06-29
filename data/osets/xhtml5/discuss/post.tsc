@@ -1,0 +1,21 @@
+<div class="pagecontent_discuss pagecontent_discuss_hybrid_list">
+[if:content:topic.posts != ]
+	<div class="pagecontent_box pagecontent_box_infoblock">
+		<div>[rewrite:l10n]pas_http_discuss_posts[/rewrite] <em>[rewrite:content]topic.posts[/rewrite]</em></div>
+	</div>
+[/if]
+	<h1>[link:params:m=datalinker:a=related:dsd=oid+[rewrite:content]topic.id[/rewrite]][rewrite:content]topic.title[/rewrite][/link]</h1>
+[if:content:topic.description != ]
+	<p>[rewrite:formtags_content]topic.description[/rewrite]</p>
+[/if]
+[if:content:topic.parent != ]
+[block:content:topic.parent]datalinker.ParentBox.render[/block]
+[/if]
+	<article class="pagecontent_discuss pagecontent_discuss_list_post">
+	[rewrite:user_author_bar]author_bar[/rewrite]
+		<div class="pagecontent_user_quote"><div class="pagecontent_box pagecontent_user_above_wrote">
+			<h1>[rewrite:content]title[/rewrite]</h1>
+			<p[if:content:preserve_space == 1] class="pagecontent_monospace_box"[/if]>[rewrite:formtags_content]content[/rewrite]</p>
+		</div></div>
+	</article>
+</div>

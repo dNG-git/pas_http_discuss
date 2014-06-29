@@ -1,0 +1,39 @@
+{
+ "pas_http_discuss_last_post_empty": "Ohne Vorschau",
+ "pas_http_discuss_latest_post": "Neuester Beitrag",
+ "pas_http_discuss_latest_post_empty": "Bisher ohne Beiträge",
+ "pas_http_discuss_list": "Liste",
+ "pas_http_discuss_list_empty": "Derzeit sind keine Themen für diese Liste veröffentlicht worden.",
+ "pas_http_discuss_posts": "Beiträge",
+ "pas_http_discuss_topic": "Thema",
+ "pas_http_discuss_topics": "Themen",
+
+ "pas_http_discuss_latest_post_1": "Neuester Beitrag vom ",
+ "pas_http_discuss_latest_post_2": " durch ",
+ "pas_http_discuss_latest_post_3": ".",
+
+ "pas_http_discuss_list_manage": "Liste verwalten",
+ "pas_http_discuss_done_list_manage": "Die Liste wurde erfolgreich verändert.",
+
+ "pas_http_discuss_post_edit": "Beitrag bearbeiten",
+ "pas_http_discuss_done_post_edit": "Der Beitrag wurde erfolgreich bearbeitet.",
+
+ "pas_http_discuss_post_new": "Beitrag hinzufügen",
+ "pas_http_discuss_done_post_new": "Der Beitrag wurde erfolgreich hinzugefügt.",
+
+ "pas_http_discuss_topic_edit": "Thema bearbeiten",
+ "pas_http_discuss_done_topic_edit": "Das Thema wurde erfolgreich bearbeitet.",
+
+ "pas_http_discuss_topic_new": "Thema hinzufügen",
+ "pas_http_discuss_done_topic_new": "Das Thema wurde erfolgreich hinzugefügt.",
+
+ "pas_http_discuss_post_content": "Inhalt",
+ "pas_http_discuss_post_title": "Titel",
+ "pas_http_discuss_topic_title": "Titel",
+ "pas_http_discuss_topic_description": "Zusammenfassung",
+ "pas_http_discuss_topic_tag": "Eindeutiger Tag",
+
+ "errors_pas_http_discuss_lid_invalid": "Die angegebene Listen-ID ist ungültig.",
+ "errors_pas_http_discuss_pid_invalid": "Die angegebene Beitrags-ID ist ungültig.",
+ "errors_pas_http_discuss_tid_invalid": "Die angegebene Themen-ID ist ungültig."
+}
