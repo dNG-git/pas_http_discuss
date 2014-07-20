@@ -49,7 +49,9 @@ from dNG.pas.data.text.l10n import L10n
 from dNG.pas.data.xhtml.form_tags import FormTags
 from dNG.pas.data.xhtml.link import Link
 from dNG.pas.data.xhtml.notification_store import NotificationStore
+from dNG.pas.data.xhtml.form.form_tags_textarea_field import FormTagsTextareaField
 from dNG.pas.data.xhtml.form.processor import Processor as FormProcessor
+from dNG.pas.data.xhtml.form.text_field import TextField
 from dNG.pas.database.nothing_matched_exception import NothingMatchedException
 from dNG.pas.database.transaction_context import TransactionContext
 from .module import Module
@@ -114,12 +116,14 @@ Action for "new"
 		datalinker_parent = topic.load_parent()
 		if (isinstance(datalinker_parent, OwnableInstance) and (not datalinker_parent.is_readable_for_session_user(session))): raise TranslatableError("core_access_denied", 403)
 
+		if (self.response.is_supported("html_css_files")): self.response.add_theme_css_file("mini_default_sprite.min.css")
+
 		Link.set_store("servicemenu",
 		               Link.TYPE_RELATIVE,
 		               L10n.get("core_back"),
 		               { "__query__": re.sub("\\_\\_\\w+\\_\\_", "", source_iline) },
-		               image = "mini_default_back",
-		               priority = 2
+		               icon = "mini-default-back",
+		               priority = 7
 		              )
 
 		if (not DatabaseTasks.is_available()): raise TranslatableException("pas_core_tasks_daemon_not_available")
@@ -127,7 +131,7 @@ Action for "new"
 		form_id = InputFilter.filter_control_chars(self.request.get_parameter("form_id"))
 
 		form = FormProcessor(form_id)
-		form.set_validator_context({ "topic": topic })
+		form.set_context({ "topic": topic })
 
 		post_title = None
 
@@ -138,20 +142,20 @@ Action for "new"
 			post_title = topic_data['title']
 		#
 
-		form.add_text({ "name": "dtitle",
-		                "title": L10n.get("pas_http_discuss_post_title"),
-		                "content": post_title,
-		                "required": True,
-		                "size": "l",
-		                "min": int(Settings.get("pas_http_discuss_post_title_min", 10))
-		              })
+		field = TextField("dtitle")
+		field.set_title(L10n.get("pas_http_discuss_post_title"))
+		field.set_value(post_title)
+		field.set_required()
+		field.set_size(TextField.SIZE_LARGE)
+		field.set_limits(int(Settings.get("pas_http_discuss_topic_title_min", 10)))
+		form.add(field)
 
-		form.add_textarea({ "name": "dpost",
-		                    "title": L10n.get("pas_http_discuss_post_content"),
-		                    "required": True,
-		                    "size": "l",
-		                    "min": int(Settings.get("pas_http_discuss_post_content_min", 6))
-		                  })
+		field = FormTagsTextareaField("dpost")
+		field.set_title(L10n.get("pas_http_discuss_post_content"))
+		field.set_required()
+		field.set_size(FormTagsTextareaField.SIZE_LARGE)
+		field.set_limits(int(Settings.get("pas_http_discuss_post_content_min", 6)))
+		form.add(field)
 
 		if (is_save_mode and form.check()):
 		#
@@ -189,12 +193,12 @@ Action for "new"
 				elif (is_datalinker_entry): topic.add_entry(post)
 
 				post.save()
-
-				pid_d = post.get_id()
-				lid = (None if (datalinker_parent == None) else datalinker_parent.get_id())
-
-				DatabaseTasks.get_instance().add("dNG.pas.discuss.Post.onAdded.{0}".format(pid_d), "dNG.pas.discuss.Post.onAdded", 1, list_id = lid, topic_id = oid, post_id = pid_d)
 			#
+
+			pid_d = post.get_id()
+			lid = (None if (datalinker_parent == None) else datalinker_parent.get_id())
+
+			DatabaseTasks.get_instance().add("dNG.pas.discuss.Post.onAdded.{0}".format(pid_d), "dNG.pas.discuss.Post.onAdded", 1, list_id = lid, topic_id = oid, post_id = pid_d)
 
 			target_iline = target_iline.replace("__id_d__", "{0}".format(pid_d))
 			target_iline = re.sub("\\_\\_\\w+\\_\\_", "", target_iline)

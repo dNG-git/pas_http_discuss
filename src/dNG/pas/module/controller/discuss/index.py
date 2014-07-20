@@ -102,15 +102,18 @@ Action for "list"
 			else: raise TranslatableError("core_access_denied", 403)
 		#
 
+		if (self.response.is_supported("html_css_files")): self.response.add_theme_css_file("mini_default_sprite.min.css")
+
 		is_hybrid_list = _list.is_hybrid_list()
 
 		if (is_hybrid_list and _list.is_writable()):
 		#
 			Link.set_store("servicemenu",
-			               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED), L10n.get("pas_http_discuss_topic_new"),
+			               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
+			               L10n.get("pas_http_discuss_topic_new"),
 			               { "m": "discuss", "s": "topic", "a": "new", "dsd": { "dlid": lid } },
-			               image = "mini_default_option",
-			               priority = 6
+			               icon = "mini-default-option",
+			               priority = 3
 			              )
 		#
 
@@ -124,19 +127,21 @@ Action for "list"
 			if (subscription_handler.is_subscribed_by_session_user(session)):
 			#
 				Link.set_store("servicemenu",
-				               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED), L10n.get("pas_http_subscription_unsubscribe"),
+				               Link.TYPE_RELATIVE,
+				               L10n.get("pas_http_subscription_unsubscribe"),
 				               { "m": "subscription", "s": "datalinker", "a": "unsubscribe", "dsd": subscription_dsd },
-				               image = "mini_default_option",
-				               priority = 6
+				               icon = "mini-default-option",
+				               priority = 3
 				              )
 			#
 			else:
 			#
 				Link.set_store("servicemenu",
-				               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED), L10n.get("pas_http_subscription_subscribe"),
+				               Link.TYPE_RELATIVE,
+				               L10n.get("pas_http_subscription_subscribe"),
 				               { "m": "subscription", "s": "datalinker", "a": "subscribe", "dsd": subscription_dsd },
-				               image = "mini_default_option",
-				               priority = 6
+				               icon = "mini-default-option",
+				               priority = 3
 				              )
 			#
 		#
@@ -144,10 +149,11 @@ Action for "list"
 		if (_list.is_manageable()):
 		#
 			Link.set_store("servicemenu",
-			               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED), L10n.get("pas_http_discuss_list_manage"),
+			               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
+			               L10n.get("pas_http_discuss_list_manage"),
 			               { "m": "discuss", "s": "list", "a": "manage", "dsd": { "dlid": lid } },
-			               image = "mini_default_option",
-			               priority = 6
+			               icon = "mini-default-option",
+			               priority = 3
 			              )
 		#
 
@@ -294,6 +300,8 @@ Action for "post"
 			else: raise TranslatableError("core_access_denied", 403)
 		#
 
+		if (self.response.is_supported("html_css_files")): self.response.add_theme_css_file("mini_default_sprite.min.css")
+
 		if (is_topic):
 		#
 			tid = post_parent.get_id()
@@ -301,10 +309,11 @@ Action for "post"
 			if (post_parent.is_writable_for_session_user(session)):
 			#
 				Link.set_store("servicemenu",
-				               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED), L10n.get("pas_http_discuss_post_new"),
+				               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
+				               L10n.get("pas_http_discuss_post_new"),
 				               { "m": "discuss", "s": "post", "a": "new", "dsd": { "dtid": tid } },
-				               image = "mini_default_option",
-				               priority = 6
+				               icon = "mini-default-option",
+				               priority = 3
 				              )
 			#
 
@@ -315,19 +324,21 @@ Action for "post"
 				if (subscription_handler.is_subscribed_by_session_user(session)):
 				#
 					Link.set_store("servicemenu",
-					               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED), L10n.get("pas_http_discuss_topic_unsubscribe"),
+					               Link.TYPE_RELATIVE,
+					               L10n.get("pas_http_discuss_topic_unsubscribe"),
 					               { "m": "discuss", "s": "topic_subscription", "a": "unsubscribe", "dsd": { "dtid": tid } },
-					               image = "mini_default_option",
-					               priority = 6
+					               icon = "mini-default-option",
+					               priority = 3
 					              )
 				#
 				else:
 				#
 					Link.set_store("servicemenu",
-					               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED), L10n.get("pas_http_discuss_topic_subscribe"),
+					               Link.TYPE_RELATIVE,
+					               L10n.get("pas_http_discuss_topic_subscribe"),
 					               { "m": "discuss", "s": "topic_subscription", "a": "subscribe", "dsd": { "dtid": tid } },
-					               image = "mini_default_option",
-					               priority = 6
+					               icon = "mini-default-option",
+					               priority = 3
 					              )
 				#
 			#
@@ -346,19 +357,21 @@ Action for "post"
 			                 )
 
 			Link.set_store("servicemenu",
-			               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED), L10n.get("pas_http_discuss_topic_new"),
+			               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
+			               L10n.get("pas_http_discuss_topic_new"),
 			               { "m": "discuss", "s": "topic", "a": "new", "dsd": dsd_parameters },
-			               image = "mini_default_option",
-			               priority = 6
+			               icon = "mini-default-option",
+			               priority = 3
 			              )
 
 			if (is_list and topic_parent.is_manageable_for_session_user(session)):
 			#
 				Link.set_store("servicemenu",
-				               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED), L10n.get("pas_http_discuss_list_manage"),
+				               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
+				               L10n.get("pas_http_discuss_list_manage"),
 				               { "m": "discuss", "s": "list", "a": "manage", "dsd": { "dlid": topic_parent_id } },
-				               image = "mini_default_option",
-				               priority = 6
+				               icon = "mini-default-option",
+				               priority = 3
 				              )
 			#
 		#
@@ -444,7 +457,7 @@ Action for "post"
 
 		self.response.init(True)
 		self.response.set_title(topic_data['title'])
-		self.response.set_expires_relative(+120)
+		self.response.set_expires_relative(+30)
 		self.response.set_last_modified(post_data['time_sortable'])
 		self.response.add_oset_content("discuss.post", content)
 
@@ -488,13 +501,16 @@ Action for "topic"
 			else: raise TranslatableError("core_access_denied", 403)
 		#
 
+		if (self.response.is_supported("html_css_files")): self.response.add_theme_css_file("mini_default_sprite.min.css")
+
 		if (topic.is_writable()):
 		#
 			Link.set_store("servicemenu",
-			               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED), L10n.get("pas_http_discuss_post_new"),
+			               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
+			               L10n.get("pas_http_discuss_post_new"),
 			               { "m": "discuss", "s": "post", "a": "new", "dsd": { "dtid": tid } },
-			               image = "mini_default_option",
-			               priority = 6
+			               icon = "mini-default-option",
+			               priority = 3
 			              )
 		#
 
@@ -505,19 +521,21 @@ Action for "topic"
 			if (subscription_handler.is_subscribed_by_session_user(session)):
 			#
 				Link.set_store("servicemenu",
-				               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED), L10n.get("pas_http_discuss_topic_unsubscribe"),
+				               Link.TYPE_RELATIVE,
+				               L10n.get("pas_http_discuss_topic_unsubscribe"),
 				               { "m": "discuss", "s": "topic_subscription", "a": "unsubscribe", "dsd": { "dtid": tid } },
-				               image = "mini_default_option",
-				               priority = 6
+				               icon = "mini-default-option",
+				               priority = 3
 				              )
 			#
 			else:
 			#
 				Link.set_store("servicemenu",
-				               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED), L10n.get("pas_http_discuss_topic_subscribe"),
+				               Link.TYPE_RELATIVE,
+				               L10n.get("pas_http_discuss_topic_subscribe"),
 				               { "m": "discuss", "s": "topic_subscription", "a": "subscribe", "dsd": { "dtid": tid } },
-				               image = "mini_default_option",
-				               priority = 6
+				               icon = "mini-default-option",
+				               priority = 3
 				              )
 			#
 		#
@@ -535,19 +553,21 @@ Action for "topic"
 			                 )
 
 			Link.set_store("servicemenu",
-			               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED), L10n.get("pas_http_discuss_topic_new"),
+			               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
+			               L10n.get("pas_http_discuss_topic_new"),
 			               { "m": "discuss", "s": "topic", "a": "new", "dsd": dsd_parameters },
-			               image = "mini_default_option",
-			               priority = 6
+			               icon = "mini-default-option",
+			               priority = 3
 			              )
 
 			if (is_list and topic_parent.is_manageable_for_session_user(session)):
 			#
 				Link.set_store("servicemenu",
-				               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED), L10n.get("pas_http_discuss_list_manage"),
+				               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
+				               L10n.get("pas_http_discuss_list_manage"),
 				               { "m": "discuss", "s": "list", "a": "manage", "dsd": { "dlid": topic_parent_id } },
-				               image = "mini_default_option",
-				               priority = 6
+				               icon = "mini-default-option",
+				               priority = 3
 				              )
 			#
 		#

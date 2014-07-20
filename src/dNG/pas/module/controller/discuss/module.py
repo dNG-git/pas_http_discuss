@@ -60,11 +60,6 @@ Constructor __init__(Module)
 
 		AbstractHttpController.__init__(self)
 
-		self.database = None
-		"""
-Database instance
-		"""
-
 		Settings.read_file("{0}/settings/pas_http_discuss.json".format(Settings.get("path_data")))
 	#
 
@@ -75,6 +70,8 @@ Execute the requested action.
 
 :since: v0.1.00
 		"""
+
+		# pylint: disable=broad-except
 
 		try: database = Connection.get_instance()
 		except Exception as handled_exception:

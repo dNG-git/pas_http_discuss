@@ -48,7 +48,10 @@ from dNG.pas.data.text.l10n import L10n
 from dNG.pas.data.xhtml.form_tags import FormTags
 from dNG.pas.data.xhtml.link import Link
 from dNG.pas.data.xhtml.notification_store import NotificationStore
+from dNG.pas.data.xhtml.form.form_tags_textarea_field import FormTagsTextareaField
 from dNG.pas.data.xhtml.form.processor import Processor as FormProcessor
+from dNG.pas.data.xhtml.form.text_field import TextField
+from dNG.pas.data.xhtml.form.textarea_field import TextareaField
 from dNG.pas.database.nothing_matched_exception import NothingMatchedException
 from dNG.pas.database.transaction_context import TransactionContext
 from .module import Module
@@ -141,12 +144,14 @@ Action for "new"
 			if (user_profile != None): is_manageable = user_profile.is_type("ad")
 		#
 
+		if (self.response.is_supported("html_css_files")): self.response.add_theme_css_file("mini_default_sprite.min.css")
+
 		Link.set_store("servicemenu",
 		               Link.TYPE_RELATIVE,
 		               L10n.get("core_back"),
 		               { "__query__": re.sub("\\_\\_\\w+\\_\\_", "", source_iline) },
-		               image = "mini_default_back",
-		               priority = 2
+		               icon = "mini-default-back",
+		               priority = 7
 		              )
 
 		if (not DatabaseTasks.is_available()): raise TranslatableException("pas_core_tasks_daemon_not_available")
@@ -154,40 +159,39 @@ Action for "new"
 		form_id = InputFilter.filter_control_chars(self.request.get_parameter("form_id"))
 
 		form = FormProcessor(form_id)
-		form.set_validator_context({ "list": _list })
+		form.set_context({ "list": _list })
 
 		if (is_save_mode): form.set_input_available()
 
-		form.add_text({ "name": "dtitle",
-		                "title": L10n.get("pas_http_discuss_topic_title"),
-		                "required": True,
-		                "size": "l",
-		                "min": int(Settings.get("pas_http_discuss_topic_title_min", 10))
-		              })
+		field = TextField("dtitle")
+		field.set_title(L10n.get("pas_http_discuss_topic_title"))
+		field.set_required()
+		field.set_size(TextField.SIZE_LARGE)
+		field.set_limits(int(Settings.get("pas_http_discuss_topic_title_min", 10)))
+		form.add(field)
 
 		if (is_manageable):
 		#
-			form.add_text({ "name": "dtag",
-			                "title": L10n.get("pas_http_discuss_topic_tag"),
-			                "required": False,
-			                "size": "s",
-			                "max": 255,
-			                "validators": [ self._check_tag_unique ]
-			              })
+			field = TextField("dtag")
+			field.set_title(L10n.get("pas_http_discuss_topic_tag"))
+			field.set_size(TextField.SIZE_SMALL)
+			field.set_limits(_max = 255)
+			field.set_validators([ self._check_tag_unique ])
+			form.add(field)
 		#
 
-		form.add_textarea({ "name": "ddescription",
-		                    "title": L10n.get("pas_http_discuss_topic_description"),
-		                    "size": "s",
-		                    "max": 255
-		                  })
+		field = TextareaField("ddescription")
+		field.set_title(L10n.get("pas_http_discuss_topic_description"))
+		field.set_size(TextField.SIZE_SMALL)
+		field.set_limits(_max = 255)
+		form.add(field)
 
-		form.add_textarea({ "name": "dpost",
-		                    "title": L10n.get("pas_http_discuss_post_content"),
-		                    "required": True,
-		                    "size": "l",
-		                    "min": int(Settings.get("pas_http_discuss_post_content_min", 6))
-		                  })
+		field = FormTagsTextareaField("dpost")
+		field.set_title(L10n.get("pas_http_discuss_post_content"))
+		field.set_required()
+		field.set_size(FormTagsTextareaField.SIZE_LARGE)
+		field.set_limits(int(Settings.get("pas_http_discuss_post_content_min", 6)))
+		form.add(field)
 
 		if (is_save_mode and form.check()):
 		#
@@ -246,12 +250,12 @@ Action for "new"
 
 				topic.save()
 				post.save()
-
-				pid = post.get_id()
-				tid_d = topic.get_id()
-
-				DatabaseTasks.get_instance().add("dNG.pas.discuss.Topic.onAdded.{0}".format(tid_d), "dNG.pas.discuss.Topic.onAdded", 1, list_id = oid, topic_id = tid_d, post_id = pid)
 			#
+
+			pid = post.get_id()
+			tid_d = topic.get_id()
+
+			DatabaseTasks.get_instance().add("dNG.pas.discuss.Topic.onAdded.{0}".format(tid_d), "dNG.pas.discuss.Topic.onAdded", 1, list_id = oid, topic_id = tid_d, post_id = pid)
 
 			target_iline = target_iline.replace("__id_d__", "{0}".format(tid_d))
 			target_iline = re.sub("\\_\\_\\w+\\_\\_", "", target_iline)
