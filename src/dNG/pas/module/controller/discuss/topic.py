@@ -294,7 +294,7 @@ Action for "new-save"
 :since: v0.1.00
 		"""
 
-		self.execute_new(True)
+		self.execute_new(self.request.get_type() == "POST")
 	#
 #
 

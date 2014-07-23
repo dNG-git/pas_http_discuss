@@ -135,12 +135,13 @@ Action for "new"
 
 		post_title = None
 
-		if (is_save_mode): form.set_input_available()
-		elif (isinstance(topic, Topic)):
+		if (isinstance(topic, Topic)):
 		#
 			topic_data = topic.get_data_attributes("title")
 			post_title = topic_data['title']
 		#
+
+		if (is_save_mode): form.set_input_available()
 
 		field = TextField("dtitle")
 		field.set_title(L10n.get("pas_http_discuss_post_title"))
@@ -237,7 +238,7 @@ Action for "new-save"
 :since: v0.1.00
 		"""
 
-		self.execute_new(True)
+		self.execute_new(self.request.get_type() == "POST")
 	#
 #
 
