@@ -21,6 +21,9 @@
  "pas_http_discuss_post_new": "Add post",
  "pas_http_discuss_done_post_new": "The post has been added successfully.",
 
+ "pas_http_discuss_post_reply": "Reply",
+ "pas_http_discuss_done_post_reply": "The reply has been added successfully.",
+
  "pas_http_discuss_topic_edit": "Edit topic",
  "pas_http_discuss_done_topic_edit": "The topic has been edited successfully.",
 

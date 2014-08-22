@@ -6,7 +6,7 @@ direct PAS
 Python Application Services
 ----------------------------------------------------------------------------
 (C) direct Netware Group - All rights reserved
-http://www.direct-netware.de/redirect.py?pas;http;discuss
+https://www.direct-netware.de/redirect?pas;http;discuss
 
 The following license agreement remains valid unless any additions or
 changes are being made by direct Netware Group in a written form.
@@ -25,7 +25,7 @@ You should have received a copy of the GNU General Public License along with
 this program; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 ----------------------------------------------------------------------------
-http://www.direct-netware.de/redirect.py?licenses;gpl
+https://www.direct-netware.de/redirect?licenses;gpl
 ----------------------------------------------------------------------------
 #echo(pasHttpDiscussVersion)#
 #echo(__FILEPATH__)#
@@ -36,6 +36,7 @@ from math import ceil
 from dNG.pas.data.hookable_settings import HookableSettings
 from dNG.pas.data.discuss.topic import Topic
 from dNG.pas.data.http.translatable_exception import TranslatableException
+from dNG.pas.data.text.l10n import L10n
 from dNG.pas.data.xhtml.link import Link
 from dNG.pas.data.xhtml.page_links_renderer import PageLinksRenderer
 from dNG.pas.data.xhtml.oset.file_parser import FileParser
@@ -51,7 +52,7 @@ class PostList(Module):
 :package:    pas.http
 :subpackage: discuss
 :since:      v0.1.00
-:license:    http://www.direct-netware.de/redirect.py?licenses;gpl
+:license:    https://www.direct-netware.de/redirect?licenses;gpl
              GNU General Public License 2
 	"""
 
@@ -96,13 +97,13 @@ List renderer
 		rendered_links = page_link_renderer.render()
 
 		rendered_content = rendered_links
-		for post in topic.get_posts(offset, limit): rendered_content += self._render_post(post)
+		for post in topic.get_posts(offset, limit): rendered_content += self._render_post(topic, post)
 		rendered_content += "\n" + rendered_links
 
 		self.set_action_result(rendered_content)
 	#
 
-	def _render_post(self, post):
+	def _render_post(self, topic, post):
 	#
 		"""
 Renders the post.
@@ -132,6 +133,34 @@ Renders the post.
 		            "preserve_space": post_data['preserve_space']
 		          }
 
+		options = [ ]
+		session = self.request.get_session()
+
+		if (post.is_writable_for_session_user(session)):
+		#
+			options.append({ "title": L10n.get("pas_http_discuss_post_edit"),
+			                 "type": (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
+			                 "parameters": { "m": "discuss",
+			                                 "s": "post",
+			                                 "a": "edit",
+			                                 "dsd": { "dpid": post_data['id'] }
+			                               }
+			               })
+		#
+
+		if (topic.is_writable_for_session_user(session)):
+		#
+			options.append({ "title": L10n.get("pas_http_discuss_post_reply"),
+			                 "type": (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
+			                 "parameters": { "m": "discuss",
+			                                 "s": "post",
+			                                 "a": "reply",
+			                                 "dsd": { "dpid": post_data['id'] }
+			                               }
+			               })
+		#
+
+		if (len(options) > 0): content['options'] = { "entries": options }
 		if (post_data['time_published'] != post_data['time_sortable']): content['time_updated'] = post_data['time_sortable']
 
 		parser = FileParser()

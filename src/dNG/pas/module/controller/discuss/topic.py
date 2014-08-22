@@ -6,7 +6,7 @@ direct PAS
 Python Application Services
 ----------------------------------------------------------------------------
 (C) direct Netware Group - All rights reserved
-http://www.direct-netware.de/redirect.py?pas;http;discuss
+https://www.direct-netware.de/redirect?pas;http;discuss
 
 The following license agreement remains valid unless any additions or
 changes are being made by direct Netware Group in a written form.
@@ -25,7 +25,7 @@ You should have received a copy of the GNU General Public License along with
 this program; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 ----------------------------------------------------------------------------
-http://www.direct-netware.de/redirect.py?licenses;gpl
+https://www.direct-netware.de/redirect?licenses;gpl
 ----------------------------------------------------------------------------
 #echo(pasHttpDiscussVersion)#
 #echo(__FILEPATH__)#
@@ -40,8 +40,8 @@ from dNG.pas.data.settings import Settings
 from dNG.pas.data.discuss.list import List
 from dNG.pas.data.discuss.topic import Topic as _Topic
 from dNG.pas.data.discuss.post import Post
-from dNG.pas.data.http.translatable_exception import TranslatableException
 from dNG.pas.data.http.translatable_error import TranslatableError
+from dNG.pas.data.http.translatable_exception import TranslatableException
 from dNG.pas.data.tasks.database_proxy import DatabaseProxy as DatabaseTasks
 from dNG.pas.data.text.input_filter import InputFilter
 from dNG.pas.data.text.l10n import L10n
@@ -66,28 +66,32 @@ Service for "m=discuss;s=topic"
 :package:    pas.http
 :subpackage: discuss
 :since:      v0.1.00
-:license:    http://www.direct-netware.de/redirect.py?licenses;gpl
+:license:    https://www.direct-netware.de/redirect?licenses;gpl
              GNU General Public License 2
 	"""
 
-	def _check_tag_unique(self, field_data, validator_context):
+	def _check_tag_unique(self, field, validator_context):
 	#
 		"""
 Form validator that checks if the tag is unique if defined.
 
-:param field_data: Form field data
+:param field: Form field
 :param validator_context: Form validator context
 
 :return: (str) Error message; None on success
 :since:  v0.1.00
 		"""
 
-		is_valid = (validator_context['list'].is_tag_unique(field_data['content'])
-		            if (len(field_data['content']) > 0) else
-		            True
-		           )
+		_return = None
 
-		return (None if (is_valid) else L10n.get("pas_http_datalinker_form_error_tag_not_unique"))
+		value = field.get_value()
+
+		if ((validator_context['form'] == "new" or value != validator_context['current_tag'])
+		    and len(value) > 0
+		    and (not validator_context['list'].is_tag_unique(value))
+		   ): _return = L10n.get("pas_http_datalinker_form_error_tag_not_unique")
+
+		return _return
 	#
 
 	def execute_new(self, is_save_mode = False):
@@ -106,7 +110,7 @@ Action for "new"
 		source_iline = InputFilter.filter_control_chars(self.request.get_dsd("source", "")).strip()
 		target_iline = InputFilter.filter_control_chars(self.request.get_dsd("target", "")).strip()
 
-		source = ""
+		source = source_iline
 
 		if (source_iline == ""):
 		#
@@ -115,12 +119,9 @@ Action for "new"
 			                "m=discuss;dsd=dlid+{0}".format(Link.encode_query_value(lid))
 			               )
 		#
-		else: source = Link.encode_query_value(source_iline)
 
-		target = ""
-
+		target = target_iline
 		if (target_iline == ""): target_iline = "m=discuss;dsd=dtid+__id_d__"
-		else: target = Link.encode_query_value(target_iline)
 
 		L10n.init("pas_http_datalinker")
 		L10n.init("pas_http_discuss")
@@ -159,7 +160,7 @@ Action for "new"
 		form_id = InputFilter.filter_control_chars(self.request.get_parameter("form_id"))
 
 		form = FormProcessor(form_id)
-		form.set_context({ "list": _list })
+		form.set_context({ "form": "new", "list": _list })
 
 		if (is_save_mode): form.set_input_available()
 
@@ -204,19 +205,22 @@ Action for "new"
 
 			post = Post()
 
+			topic_timestamp = time()
+			topic_title = InputFilter.filter_control_chars(form.get_value("dtitle"))
+			topic_description = InputFilter.filter_control_chars(form.get_value("ddescription"))
+
+			topic_tag = (InputFilter.filter_control_chars(form.get_value("dtag"))
+			             if (is_manageable) else
+			             None
+			            )
+
+			post_content = InputFilter.filter_control_chars(form.get_value("dpost"))
+
+			post_preview = re.sub("(\\n)+", " ", FormTags.sanitize(post_content))
+			if (len(post_preview) > 255): post_preview = "{0} ...".format(post_preview[:251])
+
 			with TransactionContext():
 			#
-				user_profile = (None if (session == None) else session.get_user_profile())
-
-				topic_timestamp = time()
-				topic_title = InputFilter.filter_control_chars(form.get_value("dtitle"))
-				topic_description = InputFilter.filter_control_chars(form.get_value("ddescription"))
-
-				topic_tag = (InputFilter.filter_control_chars(form.get_value("dtag"))
-				             if (is_manageable) else
-				             None
-				            )
-
 				topic_data = { "time_sortable": topic_timestamp,
 				               "title": FormTags.encode(topic_title),
 				               "tag": topic_tag,
@@ -224,11 +228,11 @@ Action for "new"
 				               "description": topic_description
 				             }
 
+				user_profile = (None if (session == None) else session.get_user_profile())
+
 				if (user_profile != None): topic_data['author_id'] = user_profile.get_id()
 
 				topic.set_data_attributes(**topic_data)
-
-				post_content = InputFilter.filter_control_chars(form.get_value("dpost"))
 
 				post_data = { "time_sortable": topic_timestamp,
 				              "title": FormTags.encode(topic_title),
@@ -239,9 +243,6 @@ Action for "new"
 				if (user_profile != None): post_data['author_id'] = user_profile.get_id()
 
 				post.set_data_attributes(**post_data)
-
-				post_preview = re.sub("(\\n)+", " ", FormTags.sanitize(post_content))
-				if (len(post_preview) > 255): post_preview = "{0} ...".format(post_preview[:251])
 
 				if (is_list): _list.add_topic(topic, post, post_preview)
 				elif (is_datalinker_entry): _list.add_entry(topic)

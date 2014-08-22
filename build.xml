@@ -4,7 +4,7 @@ direct PAS
 Python Application Services
 
 (C) direct Netware Group - All rights reserved
-http://www.direct-netware.de/redirect.py?pas;http;discuss
+https://www.direct-netware.de/redirect?pas;http;discuss
 
 The following license agreement remains valid unless any additions or
 changes are being made by direct Netware Group in a written form.
@@ -23,7 +23,7 @@ You should have received a copy of the GNU General Public License along with
 this program; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
-http://www.direct-netware.de/redirect.py?licenses;gpl
+https://www.direct-netware.de/redirect?licenses;gpl
 // -->
 <project name="pas_http_discuss" default="compile.pas.src">
 	<dirname property="pas.basedir" file="${ant.file}" />

@@ -6,7 +6,7 @@ direct PAS
 Python Application Services
 ----------------------------------------------------------------------------
 (C) direct Netware Group - All rights reserved
-http://www.direct-netware.de/redirect.py?pas;http;discuss
+https://www.direct-netware.de/redirect?pas;http;discuss
 
 The following license agreement remains valid unless any additions or
 changes are being made by direct Netware Group in a written form.
@@ -25,7 +25,7 @@ You should have received a copy of the GNU General Public License along with
 this program; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 ----------------------------------------------------------------------------
-http://www.direct-netware.de/redirect.py?licenses;gpl
+https://www.direct-netware.de/redirect?licenses;gpl
 ----------------------------------------------------------------------------
 #echo(pasHttpDiscussVersion)#
 #echo(__FILEPATH__)#
@@ -49,14 +49,14 @@ from .module import Module
 class Index(Module):
 #
 	"""
-Service for "m=discuss;s=index"
+Service for "m=discuss"
 
 :author:     direct Netware Group
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas.http
 :subpackage: discuss
 :since:      v0.1.00
-:license:    http://www.direct-netware.de/redirect.py?licenses;gpl
+:license:    https://www.direct-netware.de/redirect?licenses;gpl
              GNU General Public License 2
 	"""
 
@@ -302,12 +302,31 @@ Action for "post"
 
 		if (self.response.is_supported("html_css_files")): self.response.add_theme_css_file("mini_default_sprite.min.css")
 
+		if (post.is_writable()):
+		#
+			Link.set_store("servicemenu",
+			               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
+			               L10n.get("pas_http_discuss_post_edit"),
+			               { "m": "discuss", "s": "post", "a": "edit", "dsd": { "dpid": pid } },
+			               icon = "mini-default-option",
+			               priority = 3
+			              )
+		#
+
 		if (is_topic):
 		#
 			tid = post_parent.get_id()
 
 			if (post_parent.is_writable_for_session_user(session)):
 			#
+				Link.set_store("servicemenu",
+				               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
+				               L10n.get("pas_http_discuss_post_reply"),
+				               { "m": "discuss", "s": "post", "a": "reply", "dsd": { "dpid": pid } },
+				               icon = "mini-default-option",
+				               priority = 3
+				              )
+
 				Link.set_store("servicemenu",
 				               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
 				               L10n.get("pas_http_discuss_post_new"),

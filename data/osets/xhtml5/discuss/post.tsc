@@ -12,10 +12,16 @@
 [block:content:topic.parent]datalinker.ParentBox.render[/block]
 [/if]
 	<article class="pagecontent_discuss pagecontent_discuss_list_post">
-	[rewrite:user_author_bar]author_bar[/rewrite]
+[if:content:options != ]
+		<div class="pageoptionsbar_right">[block:content:options]output.OptionsBar.render[/block]</div>
+[/if]
+[rewrite:user_author_bar]author_bar[/rewrite]
 		<div class="pagecontent_user_quote"><div class="pagecontent_box pagecontent_user_above_wrote">
 			<h1>[rewrite:content]title[/rewrite]</h1>
 			<p[if:content:preserve_space == 1] class="pagecontent_monospace_box"[/if]>[rewrite:formtags_content]content[/rewrite]</p>
+[if:content:time_updated != ]
+			<p><small>[rewrite:l10n]pas_http_datalinker_entry_updated_1[/rewrite]<strong>[rewrite:timestamp:date_time_short]time_updated[/rewrite]</strong>[rewrite:l10n]pas_http_datalinker_entry_updated_2[/rewrite]</small></p>
+[/if]
 		</div></div>
 	</article>
 </div>

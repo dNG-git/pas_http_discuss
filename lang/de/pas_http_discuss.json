@@ -21,6 +21,9 @@
  "pas_http_discuss_post_new": "Beitrag hinzufügen",
  "pas_http_discuss_done_post_new": "Der Beitrag wurde erfolgreich hinzugefügt.",
 
+ "pas_http_discuss_post_reply": "Beantworten",
+ "pas_http_discuss_done_post_reply": "Die Antwort wurde erfolgreich hinzugefügt.",
+
  "pas_http_discuss_topic_edit": "Thema bearbeiten",
  "pas_http_discuss_done_topic_edit": "Das Thema wurde erfolgreich bearbeitet.",
 
