@@ -94,11 +94,11 @@ Action for "list"
 		except NothingMatchedException as handled_exception: raise TranslatableError("pas_http_discuss_lid_invalid", 404, _exception = handled_exception)
 
 		session = self.request.get_session()
-		if (session != None): _list.set_permission_session(session)
+		if (session is not None): _list.set_permission_session(session)
 
 		if (not _list.is_readable()):
 		#
-			if (session == None or session.get_user_profile() == None): raise TranslatableError("pas_http_discuss_lid_invalid", 404)
+			if (session is None or session.get_user_profile() is None): raise TranslatableError("pas_http_discuss_lid_invalid", 404)
 			else: raise TranslatableError("core_access_denied", 403)
 		#
 
@@ -119,7 +119,7 @@ Action for "list"
 
 		subscription_handler = (_list.get_subscription_handler() if (is_hybrid_list) else None)
 
-		if (subscription_handler != None and subscription_handler.is_subscribable_for_session_user(session)):
+		if (subscription_handler is not None and subscription_handler.is_subscribable_for_session_user(session)):
 		#
 			source = "m=discuss;dsd=dlid+{0}++dpage+{1}".format(lid, page)
 			subscription_dsd = { "oid": lid, "source": source }
@@ -184,10 +184,10 @@ Action for "list"
 			                                  }
 
 			table = DataLinkerTable(_list)
-			table.add_column('entry', L10n.get("pas_http_discuss_list"), 30, sort_key = "title", renderer = entry_renderer_attributes)
-			table.add_column('total_topics', L10n.get("pas_http_discuss_topics"), 10, renderer = { "type": DataLinkerTable.COLUMN_RENDERER_SAFE_CONTENT, "css_text_align": "center" })
-			table.add_column('total_posts', L10n.get("pas_http_discuss_posts"), 10, renderer = { "type": DataLinkerTable.COLUMN_RENDERER_SAFE_CONTENT, "css_text_align": "center" })
-			table.add_column('latest_post', L10n.get("pas_http_discuss_latest_post"), 50, renderer = latest_post_renderer_attributes)
+			table.add_column("entry", L10n.get("pas_http_discuss_list"), 30, sort_key = "title", renderer = entry_renderer_attributes)
+			table.add_column("total_topics", L10n.get("pas_http_discuss_topics"), 10, renderer = { "type": DataLinkerTable.COLUMN_RENDERER_SAFE_CONTENT, "css_text_align": "center" })
+			table.add_column("total_posts", L10n.get("pas_http_discuss_posts"), 10, renderer = { "type": DataLinkerTable.COLUMN_RENDERER_SAFE_CONTENT, "css_text_align": "center" })
+			table.add_column("latest_post", L10n.get("pas_http_discuss_latest_post"), 50, renderer = latest_post_renderer_attributes)
 
 			table.disable_sort("latest_post")
 			table.set_limit(15)
@@ -224,9 +224,9 @@ Action for "list"
 			                                  }
 
 			table = DataLinkerTable(_list)
-			table.add_column('topic', L10n.get("pas_http_discuss_topic"), 40, sort_key = "title", renderer = topic_renderer_attributes)
-			table.add_column('posts', L10n.get("pas_http_discuss_posts"), 10, renderer = { "type": DataLinkerTable.COLUMN_RENDERER_SAFE_CONTENT, "css_text_align": "center" })
-			table.add_column('latest_post', L10n.get("pas_http_discuss_latest_post"), 50, renderer = latest_post_renderer_attributes)
+			table.add_column("topic", L10n.get("pas_http_discuss_topic"), 40, sort_key = "title", renderer = topic_renderer_attributes)
+			table.add_column("posts", L10n.get("pas_http_discuss_posts"), 10, renderer = { "type": DataLinkerTable.COLUMN_RENDERER_SAFE_CONTENT, "css_text_align": "center" })
+			table.add_column("latest_post", L10n.get("pas_http_discuss_latest_post"), 50, renderer = latest_post_renderer_attributes)
 
 			table.disable_sort("latest_post")
 			table.set_limit(15)
@@ -237,7 +237,7 @@ Action for "list"
 
 		list_parent = _list.load_parent()
 
-		if (list_parent != None
+		if (list_parent is not None
 		    and ((not isinstance(list_parent, OwnableInstance))
 		         or list_parent.is_readable_for_session_user(session)
 		        )
@@ -282,11 +282,11 @@ Action for "post"
 		except NothingMatchedException as handled_exception: raise TranslatableError("pas_http_discuss_pid_invalid", 404, _exception = handled_exception)
 
 		session = self.request.get_session()
-		if (session != None): post.set_permission_session(session)
+		if (session is not None): post.set_permission_session(session)
 
 		if (not post.is_readable()):
 		#
-			if (session == None or session.get_user_profile() == None): raise TranslatableError("pas_http_discuss_pid_invalid", 404)
+			if (session is None or session.get_user_profile() is None): raise TranslatableError("pas_http_discuss_pid_invalid", 404)
 			else: raise TranslatableError("core_access_denied", 403)
 		#
 
@@ -296,7 +296,7 @@ Action for "post"
 		if (not isinstance(post_parent, DataLinker)): raise TranslatableError("pas_http_discuss_pid_invalid", 404)
 		elif (not post_parent.is_readable_for_session_user(session)):
 		#
-			if (session == None or session.get_user_profile() == None): raise TranslatableError("pas_http_discuss_pid_invalid", 404)
+			if (session is None or session.get_user_profile() is None): raise TranslatableError("pas_http_discuss_pid_invalid", 404)
 			else: raise TranslatableError("core_access_denied", 403)
 		#
 
@@ -338,7 +338,7 @@ Action for "post"
 
 			subscription_handler = post_parent.get_subscription_handler()
 
-			if (subscription_handler != None and subscription_handler.is_subscribable_for_session_user(session)):
+			if (subscription_handler is not None and subscription_handler.is_subscribable_for_session_user(session)):
 			#
 				if (subscription_handler.is_subscribed_by_session_user(session)):
 				#
@@ -462,7 +462,7 @@ Action for "post"
 		if (topic_data['posts'] > 0): topic_content['posts'] = topic_data['posts']
 		if (topic_data['sub_entries'] > 0): topic_content['sub_entries'] = { "type": topic_data['sub_entries_type'], "id": topic_data['id'] }
 
-		if (topic_parent != None
+		if (topic_parent is not None
 		    and ((not isinstance(topic_parent, OwnableInstance))
 		         or topic_parent.is_readable_for_session_user(session)
 		        )
@@ -512,11 +512,11 @@ Action for "topic"
 		except NothingMatchedException as handled_exception: raise TranslatableError("pas_http_discuss_tid_invalid", 404, _exception = handled_exception)
 
 		session = self.request.get_session()
-		if (session != None): topic.set_permission_session(session)
+		if (session is not None): topic.set_permission_session(session)
 
 		if (not topic.is_readable()):
 		#
-			if (session == None or session.get_user_profile() == None): raise TranslatableError("pas_http_discuss_tid_invalid", 404)
+			if (session is None or session.get_user_profile() is None): raise TranslatableError("pas_http_discuss_tid_invalid", 404)
 			else: raise TranslatableError("core_access_denied", 403)
 		#
 
@@ -535,7 +535,7 @@ Action for "topic"
 
 		subscription_handler = topic.get_subscription_handler()
 
-		if (subscription_handler != None and subscription_handler.is_subscribable_for_session_user(session)):
+		if (subscription_handler is not None and subscription_handler.is_subscribable_for_session_user(session)):
 		#
 			if (subscription_handler.is_subscribed_by_session_user(session)):
 			#
@@ -617,7 +617,7 @@ Action for "topic"
 
 		if (topic_data['sub_entries'] > 0): content['sub_entries'] = { "type": topic_data['sub_entries_type'], "id": topic_data['id'] }
 
-		if (topic_parent != None
+		if (topic_parent is not None
 		    and ((not isinstance(topic_parent, OwnableInstance))
 		         or topic_parent.is_readable_for_session_user(session)
 		        )

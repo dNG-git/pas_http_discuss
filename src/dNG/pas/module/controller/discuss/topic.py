@@ -139,10 +139,10 @@ Action for "new"
 			if (not _list.is_writable_for_session_user(session)): raise TranslatableError("core_access_denied", 403)
 			is_manageable = _list.is_manageable_for_session_user(session)
 		#
-		elif (session != None):
+		elif (session is not None):
 		#
 			user_profile = session.get_user_profile()
-			if (user_profile != None): is_manageable = user_profile.is_type("ad")
+			if (user_profile is not None): is_manageable = user_profile.is_type("ad")
 		#
 
 		if (self.response.is_supported("html_css_files")): self.response.add_theme_css_file("mini_default_sprite.min.css")
@@ -219,29 +219,28 @@ Action for "new"
 			post_preview = re.sub("(\\n)+", " ", FormTags.sanitize(post_content))
 			if (len(post_preview) > 255): post_preview = "{0} ...".format(post_preview[:251])
 
+			topic_data = { "time_sortable": topic_timestamp,
+			               "title": FormTags.encode(topic_title),
+			               "tag": topic_tag,
+			               "author_ip": self.request.get_client_host(),
+			               "description": topic_description
+			             }
+
+			user_profile = (None if (session is None) else session.get_user_profile())
+
+			if (user_profile is not None): topic_data['author_id'] = user_profile.get_id()
+
+			post_data = { "time_sortable": topic_timestamp,
+			              "title": FormTags.encode(topic_title),
+			              "author_ip": self.request.get_client_host(),
+			              "content": FormTags.encode(post_content)
+			             }
+
+			if (user_profile is not None): post_data['author_id'] = user_profile.get_id()
+
 			with TransactionContext():
 			#
-				topic_data = { "time_sortable": topic_timestamp,
-				               "title": FormTags.encode(topic_title),
-				               "tag": topic_tag,
-				               "author_ip": self.request.get_client_host(),
-				               "description": topic_description
-				             }
-
-				user_profile = (None if (session == None) else session.get_user_profile())
-
-				if (user_profile != None): topic_data['author_id'] = user_profile.get_id()
-
 				topic.set_data_attributes(**topic_data)
-
-				post_data = { "time_sortable": topic_timestamp,
-				              "title": FormTags.encode(topic_title),
-				              "author_ip": self.request.get_client_host(),
-				              "content": FormTags.encode(post_content)
-				             }
-
-				if (user_profile != None): post_data['author_id'] = user_profile.get_id()
-
 				post.set_data_attributes(**post_data)
 
 				if (is_list): _list.add_topic(topic, post, post_preview)

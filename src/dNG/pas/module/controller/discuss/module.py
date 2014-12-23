@@ -76,7 +76,7 @@ Execute the requested action.
 		try: database = Connection.get_instance()
 		except Exception as handled_exception:
 		#
-			if (self.log_handler != None): self.log_handler.error(handled_exception, context = "pas_http_site")
+			if (self.log_handler is not None): self.log_handler.error(handled_exception, context = "pas_http_site")
 			raise TranslatableException("core_database_error", _exception = handled_exception)
 		#
 

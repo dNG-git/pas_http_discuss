@@ -95,7 +95,7 @@ Action for "edit"
 		except NothingMatchedException as handled_exception: raise TranslatableError("pas_http_discuss_pid_invalid", 404, _exception = handled_exception)
 
 		session = self.request.get_session()
-		if (session != None): post.set_permission_session(session)
+		if (session is not None): post.set_permission_session(session)
 
 		if (not post.is_writable()): raise TranslatableError("core_access_denied", 403)
 
@@ -109,7 +109,7 @@ Action for "edit"
 
 		topic_parent = None
 
-		if (topic != None):
+		if (topic is not None):
 		#
 			topic_parent = topic.load_parent()
 			if (isinstance(topic_parent, OwnableInstance) and (not topic_parent.is_readable_for_session_user(session))): raise TranslatableError("core_access_denied", 403)
@@ -167,7 +167,7 @@ Action for "edit"
 			post.save()
 
 			oid = post_parent.get_id()
-			lid = (None if (topic_parent == None) else topic_parent.get_id())
+			lid = (None if (topic_parent is None) else topic_parent.get_id())
 
 			DatabaseTasks.get_instance().add("dNG.pas.discuss.Post.onUpdated.{0}".format(pid), "dNG.pas.discuss.Post.onUpdated", 1, list_id = lid, topic_id = oid, post_id = pid)
 
@@ -268,18 +268,18 @@ Executes the "new" or "reply" action to create a new post.
 
 		parent_post = None
 
-		if (pid != None):
+		if (pid is not None):
 		#
 			try: parent_post = _Post.load_id(pid)
 			except NothingMatchedException as handled_exception: raise TranslatableError("pas_http_discuss_pid_invalid", 404, _exception = handled_exception)
 
 			session = self.request.get_session()
-			if (session != None): parent_post.set_permission_session(session)
+			if (session is not None): parent_post.set_permission_session(session)
 
 			if (not parent_post.is_writable()): raise TranslatableError("core_access_denied", 403)
 
 			parent_post_parent = parent_post.load_parent()
-			if (parent_post_parent == None): raise TranslatableError("pas_http_discuss_pid_invalid", 404, _exception = handled_exception)
+			if (parent_post_parent is None): raise TranslatableError("pas_http_discuss_pid_invalid", 404, _exception = handled_exception)
 
 			if (isinstance(parent_post_parent, OwnableInstance) and (not OwnableInstance.is_writable_for_session_user(parent_post_parent, session))): raise TranslatableError("core_access_denied", 403)
 
@@ -290,7 +290,7 @@ Executes the "new" or "reply" action to create a new post.
 
 			topic_parent = None
 
-			if (topic != None):
+			if (topic is not None):
 			#
 				topic_parent = topic.load_parent()
 				if (isinstance(topic_parent, OwnableInstance) and (not topic_parent.is_readable_for_session_user(session))): raise TranslatableError("core_access_denied", 403)
@@ -380,24 +380,23 @@ Executes the "new" or "reply" action to create a new post.
 			post_title = InputFilter.filter_control_chars(form.get_value("dtitle"))
 			post_content = InputFilter.filter_control_chars(form.get_value("dpost"))
 
+			post_data = { "time_sortable": time(),
+			              "title": FormTags.encode(post_title),
+			              "author_ip": self.request.get_client_host(),
+			              "content": FormTags.encode(post_content)
+			             }
+
+			user_profile = (None if (session is None) else session.get_user_profile())
+			if (user_profile is not None): post_data['author_id'] = user_profile.get_id()
+
+			post_preview = re.sub("(\\n)+", " ", FormTags.sanitize(post_content))
+			if (len(post_preview) > 255): post_preview = "{0} ...".format(post_preview[:251])
+
 			with TransactionContext():
 			#
-				post_data = { "time_sortable": time(),
-				              "title": FormTags.encode(post_title),
-				              "author_ip": self.request.get_client_host(),
-				              "content": FormTags.encode(post_content)
-				             }
-
-				user_profile = (None if (session == None) else session.get_user_profile())
-				if (user_profile != None): post_data['author_id'] = user_profile.get_id()
-
 				post.set_data_attributes(**post_data)
 
-				post_preview = re.sub("(\\n)+", " ", FormTags.sanitize(post_content))
-				if (len(post_preview) > 255): post_preview = "{0} ...".format(post_preview[:251])
-
-				if (parent_post != None): parent_post.add_reply_post(post)
-
+				if (parent_post is not None): parent_post.add_reply_post(post)
 				if (is_parent_list): topic_parent.add_post(post, topic, post_preview)
 
 				if (is_topic): topic.add_post(post, post_preview)
@@ -407,7 +406,7 @@ Executes the "new" or "reply" action to create a new post.
 			#
 
 			pid_d = post.get_id()
-			lid = (None if (topic_parent == None) else topic_parent.get_id())
+			lid = (None if (topic_parent is None) else topic_parent.get_id())
 
 			DatabaseTasks.get_instance().add("dNG.pas.discuss.Post.onAdded.{0}".format(pid_d), "dNG.pas.discuss.Post.onAdded", 1, list_id = lid, topic_id = oid, post_id = pid_d)
 
