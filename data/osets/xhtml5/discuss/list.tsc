@@ -11,7 +11,7 @@
 [block:content:parent]datalinker.ParentBox.render[/block]
 [/if]
 [if:content:sub_entries != ]
-[block:content:sub_entries]output.Table.render[/block]
+[block:content:sub_entries]output.DatabaseTable.render[/block]
 [/if][if:content:sub_entries == ]
 [if:content:parent == ]
 	<hr />
