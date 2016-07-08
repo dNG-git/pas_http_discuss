@@ -2,7 +2,7 @@
 	<div class="pagecontent_box pagecontent_box_infoblock">
 		<div>[rewrite:l10n]pas_http_discuss_posts[/rewrite] <em>[rewrite:content]posts[/rewrite]</em></div>
 	</div>
-	<h1>[rewrite:content]title[/rewrite]</h1>
+	<h1>[rewrite:safe_content]title[/rewrite]</h1>
 [if:content:description != ]
 	<p>[rewrite:formtags_content]description[/rewrite]</p>
 [/if]

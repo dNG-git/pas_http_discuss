@@ -34,26 +34,27 @@ https://www.direct-netware.de/redirect?licenses;gpl
 from time import time
 import re
 
-from dNG.pas.controller.predefined_http_request import PredefinedHttpRequest
-from dNG.pas.data.data_linker import DataLinker
-from dNG.pas.data.ownable_mixin import OwnableMixin as OwnableInstance
-from dNG.pas.data.settings import Settings
-from dNG.pas.data.discuss.list import List
-from dNG.pas.data.discuss.topic import Topic
-from dNG.pas.data.discuss.post import Post as _Post
-from dNG.pas.data.http.translatable_error import TranslatableError
-from dNG.pas.data.http.translatable_exception import TranslatableException
-from dNG.pas.data.tasks.database_proxy import DatabaseProxy as DatabaseTasks
-from dNG.pas.data.text.input_filter import InputFilter
-from dNG.pas.data.text.l10n import L10n
-from dNG.pas.data.xhtml.form_tags import FormTags
-from dNG.pas.data.xhtml.link import Link
-from dNG.pas.data.xhtml.notification_store import NotificationStore
-from dNG.pas.data.xhtml.form.form_tags_textarea_field import FormTagsTextareaField
-from dNG.pas.data.xhtml.form.processor import Processor as FormProcessor
-from dNG.pas.data.xhtml.form.text_field import TextField
-from dNG.pas.database.nothing_matched_exception import NothingMatchedException
-from dNG.pas.database.transaction_context import TransactionContext
+from dNG.controller.predefined_http_request import PredefinedHttpRequest
+from dNG.data.data_linker import DataLinker
+from dNG.data.discuss.list import List
+from dNG.data.discuss.post import Post as _Post
+from dNG.data.discuss.topic import Topic
+from dNG.data.http.translatable_error import TranslatableError
+from dNG.data.http.translatable_exception import TranslatableException
+from dNG.data.ownable_mixin import OwnableMixin as OwnableInstance
+from dNG.data.settings import Settings
+from dNG.data.tasks.database_proxy import DatabaseProxy as DatabaseTasks
+from dNG.data.text.input_filter import InputFilter
+from dNG.data.text.l10n import L10n
+from dNG.data.xhtml.form.form_tags_textarea_field import FormTagsTextareaField
+from dNG.data.xhtml.form.processor import Processor as FormProcessor
+from dNG.data.xhtml.form.text_field import TextField
+from dNG.data.xhtml.form_tags import FormTags
+from dNG.data.xhtml.link import Link
+from dNG.data.xhtml.notification_store import NotificationStore
+from dNG.database.nothing_matched_exception import NothingMatchedException
+from dNG.database.transaction_context import TransactionContext
+
 from .module import Module
 
 class Post(Module):
@@ -61,7 +62,7 @@ class Post(Module):
 	"""
 Service for "m=discuss;s=post"
 
-:author:     direct Netware Group
+:author:     direct Netware Group et al.
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas.http
 :subpackage: discuss
@@ -94,13 +95,13 @@ Action for "edit"
 		try: post = _Post.load_id(pid)
 		except NothingMatchedException as handled_exception: raise TranslatableError("pas_http_discuss_pid_invalid", 404, _exception = handled_exception)
 
-		session = self.request.get_session()
+		session = (self.request.get_session() if (self.request.is_supported("session")) else None)
 		if (session is not None): post.set_permission_session(session)
 
 		if (not post.is_writable()): raise TranslatableError("core_access_denied", 403)
 
 		post_parent = post.load_parent()
-		if (isinstance(post_parent, OwnableInstance) and (not OwnableInstance.is_writable_for_session_user(post_parent, session))): raise TranslatableError("core_access_denied", 403)
+		if (isinstance(post_parent, OwnableInstance) and (not post_parent.is_writable_for_session_user(session))): raise TranslatableError("core_access_denied", 403)
 
 		topic = (post_parent
 		         if (isinstance(post_parent, Topic)) else
@@ -118,7 +119,7 @@ Action for "edit"
 		if (self.response.is_supported("html_css_files")): self.response.add_theme_css_file("mini_default_sprite.min.css")
 
 		Link.set_store("servicemenu",
-		               Link.TYPE_RELATIVE,
+		               Link.TYPE_RELATIVE_URL,
 		               L10n.get("core_back"),
 		               { "__query__": re.sub("\\_\\_\\w+\\_\\_", "", source_iline) },
 		               icon = "mini-default-back",
@@ -133,14 +134,11 @@ Action for "edit"
 
 		form = FormProcessor(form_id)
 
-		post_title = post_data['title']
-		post_content = post_data['content']
-
 		if (is_save_mode): form.set_input_available()
 
 		field = TextField("dtitle")
 		field.set_title(L10n.get("pas_http_discuss_post_title"))
-		field.set_value(post_title)
+		field.set_value(post_data['title'])
 		field.set_required()
 		field.set_size(TextField.SIZE_LARGE)
 		field.set_limits(int(Settings.get("pas_http_discuss_topic_title_min", 10)))
@@ -148,7 +146,7 @@ Action for "edit"
 
 		field = FormTagsTextareaField("dpost")
 		field.set_title(L10n.get("pas_http_discuss_post_content"))
-		field.set_value(post_content)
+		field.set_value(post_data['content'])
 		field.set_required()
 		field.set_size(FormTagsTextareaField.SIZE_LARGE)
 		field.set_limits(int(Settings.get("pas_http_discuss_post_content_min", 6)))
@@ -184,7 +182,7 @@ Action for "edit"
 		#
 		else:
 		#
-			content = { "title": L10n.get("pas_http_contentor_document_edit") }
+			content = { "title": L10n.get("pas_http_discuss_post_edit") }
 
 			content['form'] = { "object": form,
 			                    "url_parameters": { "__request__": True,
@@ -195,7 +193,7 @@ Action for "edit"
 			                  }
 
 			self.response.init()
-			self.response.set_title(L10n.get("pas_http_contentor_document_edit"))
+			self.response.set_title(content['title'])
 			self.response.add_oset_content("core.form", content)
 		#
 	#
@@ -267,13 +265,13 @@ Executes the "new" or "reply" action to create a new post.
 		L10n.init("pas_http_discuss")
 
 		parent_post = None
+		session = (self.request.get_session() if (self.request.is_supported("session")) else None)
 
 		if (pid is not None):
 		#
 			try: parent_post = _Post.load_id(pid)
 			except NothingMatchedException as handled_exception: raise TranslatableError("pas_http_discuss_pid_invalid", 404, _exception = handled_exception)
 
-			session = self.request.get_session()
 			if (session is not None): parent_post.set_permission_session(session)
 
 			if (not parent_post.is_writable()): raise TranslatableError("core_access_denied", 403)
@@ -281,7 +279,7 @@ Executes the "new" or "reply" action to create a new post.
 			parent_post_parent = parent_post.load_parent()
 			if (parent_post_parent is None): raise TranslatableError("pas_http_discuss_pid_invalid", 404, _exception = handled_exception)
 
-			if (isinstance(parent_post_parent, OwnableInstance) and (not OwnableInstance.is_writable_for_session_user(parent_post_parent, session))): raise TranslatableError("core_access_denied", 403)
+			if (isinstance(parent_post_parent, OwnableInstance) and (not parent_post_parent.is_writable_for_session_user(session))): raise TranslatableError("core_access_denied", 403)
 
 			topic = (parent_post_parent
 			         if (isinstance(parent_post_parent, Topic)) else
@@ -301,7 +299,6 @@ Executes the "new" or "reply" action to create a new post.
 			try: topic = Topic.load_id(oid)
 			except NothingMatchedException as handled_exception: raise TranslatableError("pas_http_datalinker_oid_invalid", 404, _exception = handled_exception)
 
-			session = self.request.get_session()
 			if (isinstance(topic, OwnableInstance) and (not OwnableInstance.is_writable_for_session_user(topic, session))): raise TranslatableError("core_access_denied", 403)
 
 			topic_parent = topic.load_parent()
@@ -311,7 +308,7 @@ Executes the "new" or "reply" action to create a new post.
 		if (self.response.is_supported("html_css_files")): self.response.add_theme_css_file("mini_default_sprite.min.css")
 
 		Link.set_store("servicemenu",
-		               Link.TYPE_RELATIVE,
+		               Link.TYPE_RELATIVE_URL,
 		               L10n.get("core_back"),
 		               { "__query__": re.sub("\\_\\_\\w+\\_\\_", "", source_iline) },
 		               icon = "mini-default-back",
@@ -380,8 +377,7 @@ Executes the "new" or "reply" action to create a new post.
 			post_title = InputFilter.filter_control_chars(form.get_value("dtitle"))
 			post_content = InputFilter.filter_control_chars(form.get_value("dpost"))
 
-			post_data = { "time_sortable": time(),
-			              "title": FormTags.encode(post_title),
+			post_data = { "title": FormTags.encode(post_title),
 			              "author_ip": self.request.get_client_host(),
 			              "content": FormTags.encode(post_content)
 			             }
@@ -434,7 +430,7 @@ Executes the "new" or "reply" action to create a new post.
 			                  }
 
 			self.response.init()
-			self.response.set_title(L10n.get("pas_http_discuss_post_{0}".format(action)))
+			self.response.set_title(content['title'])
 			self.response.add_oset_content("core.form", content)
 		#
 	#

@@ -31,52 +31,57 @@ https://www.direct-netware.de/redirect?licenses;gpl
 #echo(__FILEPATH__)#
 """
 
-# pylint: disable=unused-argument
+from dNG.data.settings import Settings
+from dNG.data.translatable_exception import TranslatableException
+from dNG.database.connection import Connection
+from dNG.module.controller.abstract_http import AbstractHttp as AbstractHttpController
 
-from dNG.pas.data.http.virtual_config import VirtualConfig
-from dNG.pas.plugins.hook import Hook
-
-def register_plugin():
+class Module(AbstractHttpController):
 #
 	"""
-Register plugin hooks.
+Module for "discuss"
+
+:author:     direct Netware Group et al.
+:copyright:  (C) direct Netware Group - All rights reserved
+:package:    pas.http
+:subpackage: discuss
+:since:      v0.1.00
+:license:    https://www.direct-netware.de/redirect?licenses;gpl
+             GNU General Public License 2
+	"""
+
+	def __init__(self):
+	#
+		"""
+Constructor __init__(Module)
 
 :since: v0.1.00
-	"""
+		"""
 
-	Hook.register("dNG.pas.http.Server.onStartup", on_startup)
-	Hook.register("dNG.pas.http.Wsgi.onStartup", on_startup)
-#
+		AbstractHttpController.__init__(self)
 
-def on_startup(params, last_return = None):
-#
-	"""
-Called for "dNG.pas.http.Server.onStartup" and "dNG.pas.http.Wsgi.onStartup"
+		Settings.read_file("{0}/settings/pas_http_discuss.json".format(Settings.get("path_data")))
+	#
 
-:param params: Parameter specified
-:param last_return: The return value from the last hook called.
-
-:return: (mixed) Return value
-:since:  v0.1.00
-	"""
-
-	VirtualConfig.set_virtual_path("/discuss/view/list/", { "m": "discuss", "s": "index", "a": "list", "path_parameters": True })
-	VirtualConfig.set_virtual_path("/discuss/view/post/", { "m": "discuss", "s": "index", "a": "post", "path_parameters": True })
-	VirtualConfig.set_virtual_path("/discuss/view/topic/", { "m": "discuss", "s": "index", "a": "topic", "path_parameters": True })
-
-	return last_return
-#
-
-def unregister_plugin():
-#
-	"""
-Unregister plugin hooks.
+	def execute(self):
+	#
+		"""
+Execute the requested action.
 
 :since: v0.1.00
-	"""
+		"""
 
-	Hook.unregister("dNG.pas.http.Server.onStartup", on_startup)
-	Hook.unregister("dNG.pas.http.Wsgi.onStartup", on_startup)
+		# pylint: disable=broad-except
+
+		try: database = Connection.get_instance()
+		except Exception as handled_exception:
+		#
+			if (self.log_handler is not None): self.log_handler.error(handled_exception, context = "pas_http_site")
+			raise TranslatableException("core_database_error", _exception = handled_exception)
+		#
+
+		with database: return AbstractHttpController.execute(self)
+	#
 #
 
 ##j## EOF

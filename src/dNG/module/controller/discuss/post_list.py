@@ -33,13 +33,14 @@ https://www.direct-netware.de/redirect?licenses;gpl
 
 from math import ceil
 
-from dNG.pas.data.hookable_settings import HookableSettings
-from dNG.pas.data.discuss.topic import Topic
-from dNG.pas.data.http.translatable_exception import TranslatableException
-from dNG.pas.data.text.l10n import L10n
-from dNG.pas.data.xhtml.link import Link
-from dNG.pas.data.xhtml.page_links_renderer import PageLinksRenderer
-from dNG.pas.data.xhtml.oset.file_parser import FileParser
+from dNG.data.discuss.topic import Topic
+from dNG.data.hookable_settings import HookableSettings
+from dNG.data.http.translatable_exception import TranslatableException
+from dNG.data.text.l10n import L10n
+from dNG.data.xhtml.link import Link
+from dNG.data.xhtml.oset.file_parser import FileParser
+from dNG.data.xhtml.page_links_renderer import PageLinksRenderer
+
 from .module import Module
 
 class PostList(Module):
@@ -47,7 +48,7 @@ class PostList(Module):
 	"""
 "PostList" creates a list of posts.
 
-:author:     direct Netware Group
+:author:     direct Netware Group et al.
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas.http
 :subpackage: discuss
@@ -85,7 +86,7 @@ List renderer
 
 		limit = hookable_settings.get("pas_http_discuss_post_list_limit", 12)
 
-		page = (self.context['page'] if ("page" in self.context) else 1)
+		page = self.context.get("page", 1)
 		pages = (1 if (posts_count == 0) else ceil(float(posts_count) / limit))
 
 		offset = (0 if (page < 1 or page > pages) else (page - 1) * limit)
@@ -126,7 +127,7 @@ Renders the post.
 
 		content = { "id": post_data['id'],
 		            "title": post_data['title'],
-		            "link": Link().build_url(Link.TYPE_RELATIVE, { "m": "discuss", "dsd": { "dpid": post_data['id'] } }),
+		            "link": Link().build_url(Link.TYPE_RELATIVE_URL, { "m": "discuss", "dsd": { "dpid": post_data['id'] } }),
 		            "author_bar": { "id": post_data['author_id'], "ip": post_data['author_ip'], "time_published": post_data['time_published'] },
 		            "time_published": post_data['time_published'],
 		            "content": post_data['content'],
@@ -134,12 +135,12 @@ Renders the post.
 		          }
 
 		options = [ ]
-		session = self.request.get_session()
+		session = (self.request.get_session() if (self.request.is_supported("session")) else None)
 
 		if (post.is_writable_for_session_user(session)):
 		#
 			options.append({ "title": L10n.get("pas_http_discuss_post_edit"),
-			                 "type": (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
+			                 "type": (Link.TYPE_RELATIVE_URL | Link.TYPE_JS_REQUIRED),
 			                 "parameters": { "m": "discuss",
 			                                 "s": "post",
 			                                 "a": "edit",
@@ -151,7 +152,7 @@ Renders the post.
 		if (topic.is_writable_for_session_user(session)):
 		#
 			options.append({ "title": L10n.get("pas_http_discuss_post_reply"),
-			                 "type": (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
+			                 "type": (Link.TYPE_RELATIVE_URL | Link.TYPE_JS_REQUIRED),
 			                 "parameters": { "m": "discuss",
 			                                 "s": "post",
 			                                 "a": "reply",

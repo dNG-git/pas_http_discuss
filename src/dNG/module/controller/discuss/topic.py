@@ -34,26 +34,27 @@ https://www.direct-netware.de/redirect?licenses;gpl
 from time import time
 import re
 
-from dNG.pas.controller.predefined_http_request import PredefinedHttpRequest
-from dNG.pas.data.ownable_mixin import OwnableMixin as OwnableInstance
-from dNG.pas.data.settings import Settings
-from dNG.pas.data.discuss.list import List
-from dNG.pas.data.discuss.topic import Topic as _Topic
-from dNG.pas.data.discuss.post import Post
-from dNG.pas.data.http.translatable_error import TranslatableError
-from dNG.pas.data.http.translatable_exception import TranslatableException
-from dNG.pas.data.tasks.database_proxy import DatabaseProxy as DatabaseTasks
-from dNG.pas.data.text.input_filter import InputFilter
-from dNG.pas.data.text.l10n import L10n
-from dNG.pas.data.xhtml.form_tags import FormTags
-from dNG.pas.data.xhtml.link import Link
-from dNG.pas.data.xhtml.notification_store import NotificationStore
-from dNG.pas.data.xhtml.form.form_tags_textarea_field import FormTagsTextareaField
-from dNG.pas.data.xhtml.form.processor import Processor as FormProcessor
-from dNG.pas.data.xhtml.form.text_field import TextField
-from dNG.pas.data.xhtml.form.textarea_field import TextareaField
-from dNG.pas.database.nothing_matched_exception import NothingMatchedException
-from dNG.pas.database.transaction_context import TransactionContext
+from dNG.controller.predefined_http_request import PredefinedHttpRequest
+from dNG.data.discuss.list import List
+from dNG.data.discuss.post import Post
+from dNG.data.discuss.topic import Topic as _Topic
+from dNG.data.http.translatable_error import TranslatableError
+from dNG.data.http.translatable_exception import TranslatableException
+from dNG.data.ownable_mixin import OwnableMixin as OwnableInstance
+from dNG.data.settings import Settings
+from dNG.data.tasks.database_proxy import DatabaseProxy as DatabaseTasks
+from dNG.data.text.input_filter import InputFilter
+from dNG.data.text.l10n import L10n
+from dNG.data.xhtml.form.form_tags_textarea_field import FormTagsTextareaField
+from dNG.data.xhtml.form.processor import Processor as FormProcessor
+from dNG.data.xhtml.form.text_field import TextField
+from dNG.data.xhtml.form.textarea_field import TextareaField
+from dNG.data.xhtml.form_tags import FormTags
+from dNG.data.xhtml.link import Link
+from dNG.data.xhtml.notification_store import NotificationStore
+from dNG.database.nothing_matched_exception import NothingMatchedException
+from dNG.database.transaction_context import TransactionContext
+
 from .module import Module
 
 class Topic(Module):
@@ -61,7 +62,7 @@ class Topic(Module):
 	"""
 Service for "m=discuss;s=topic"
 
-:author:     direct Netware Group
+:author:     direct Netware Group et al.
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas.http
 :subpackage: discuss
@@ -132,7 +133,7 @@ Action for "new"
 		except NothingMatchedException as handled_exception: raise TranslatableError("pas_http_datalinker_oid_invalid", 404, _exception = handled_exception)
 
 		is_manageable = False
-		session = self.request.get_session()
+		session = (self.request.get_session() if (self.request.is_supported("session")) else None)
 
 		if (isinstance(_list, OwnableInstance)):
 		#
@@ -148,7 +149,7 @@ Action for "new"
 		if (self.response.is_supported("html_css_files")): self.response.add_theme_css_file("mini_default_sprite.min.css")
 
 		Link.set_store("servicemenu",
-		               Link.TYPE_RELATIVE,
+		               Link.TYPE_RELATIVE_URL,
 		               L10n.get("core_back"),
 		               { "__query__": re.sub("\\_\\_\\w+\\_\\_", "", source_iline) },
 		               icon = "mini-default-back",
@@ -281,7 +282,7 @@ Action for "new"
 			                  }
 
 			self.response.init()
-			self.response.set_title(L10n.get("pas_http_discuss_topic_new"))
+			self.response.set_title(content['title'])
 			self.response.add_oset_content("core.form", content)
 		#
 	#

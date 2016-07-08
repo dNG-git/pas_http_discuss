@@ -31,19 +31,20 @@ https://www.direct-netware.de/redirect?licenses;gpl
 #echo(__FILEPATH__)#
 """
 
-from dNG.pas.data.data_linker import DataLinker
-from dNG.pas.data.hookable_settings import HookableSettings
-from dNG.pas.data.ownable_mixin import OwnableMixin as OwnableInstance
-from dNG.pas.data.settings import Settings
-from dNG.pas.data.discuss.list import List
-from dNG.pas.data.discuss.post import Post
-from dNG.pas.data.discuss.topic import Topic
-from dNG.pas.data.http.translatable_exception import TranslatableError
-from dNG.pas.data.text.input_filter import InputFilter
-from dNG.pas.data.text.l10n import L10n
-from dNG.pas.data.xhtml.link import Link
-from dNG.pas.data.xhtml.table.data_linker import DataLinker as DataLinkerTable
-from dNG.pas.database.nothing_matched_exception import NothingMatchedException
+from dNG.data.data_linker import DataLinker
+from dNG.data.discuss.list import List
+from dNG.data.discuss.post import Post
+from dNG.data.discuss.topic import Topic
+from dNG.data.hookable_settings import HookableSettings
+from dNG.data.http.translatable_error import TranslatableError
+from dNG.data.ownable_mixin import OwnableMixin as OwnableInstance
+from dNG.data.settings import Settings
+from dNG.data.text.input_filter import InputFilter
+from dNG.data.text.l10n import L10n
+from dNG.data.xhtml.link import Link
+from dNG.data.xhtml.table.data_linker import DataLinker as DataLinkerTable
+from dNG.database.nothing_matched_exception import NothingMatchedException
+
 from .module import Module
 
 class Index(Module):
@@ -51,7 +52,9 @@ class Index(Module):
 	"""
 Service for "m=discuss"
 
-:author:     direct Netware Group
+@TODO: Add link content instead of [link
+
+:author:     direct Netware Group et al.
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas.http
 :subpackage: discuss
@@ -68,9 +71,9 @@ Action for "index"
 :since: v0.1.00
 		"""
 
-		if (self.request.is_dsd_set('dtid')): self.execute_topic()
-		elif (self.request.is_dsd_set('dpid')): self.execute_post()
-		elif (self.request.is_dsd_set('dlid') or Settings.is_defined("pas_http_discuss_list_default")): self.execute_list()
+		if (self.request.is_dsd_set("dtid")): self.execute_topic()
+		elif (self.request.is_dsd_set("dpid")): self.execute_post()
+		elif (self.request.is_dsd_set("dlid") or Settings.is_defined("pas_http_discuss_list_default")): self.execute_list()
 	#
 
 	def execute_list(self):
@@ -83,6 +86,7 @@ Action for "list"
 
 		lid = InputFilter.filter_file_path(self.request.get_dsd("dlid", ""))
 		page = InputFilter.filter_int(self.request.get_dsd("dpage", 1))
+		sort_value = InputFilter.filter_control_chars(self.request.get_dsd("dsort", ""))
 
 		if (lid == ""): lid = Settings.get("pas_http_discuss_list_default", "")
 
@@ -93,7 +97,7 @@ Action for "list"
 		try: _list = List.load_id(lid)
 		except NothingMatchedException as handled_exception: raise TranslatableError("pas_http_discuss_lid_invalid", 404, _exception = handled_exception)
 
-		session = self.request.get_session()
+		session = (self.request.get_session() if (self.request.is_supported("session")) else None)
 		if (session is not None): _list.set_permission_session(session)
 
 		if (not _list.is_readable()):
@@ -109,7 +113,7 @@ Action for "list"
 		if (is_hybrid_list and _list.is_writable()):
 		#
 			Link.set_store("servicemenu",
-			               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
+			               (Link.TYPE_RELATIVE_URL | Link.TYPE_JS_REQUIRED),
 			               L10n.get("pas_http_discuss_topic_new"),
 			               { "m": "discuss", "s": "topic", "a": "new", "dsd": { "dlid": lid } },
 			               icon = "mini-default-option",
@@ -127,7 +131,7 @@ Action for "list"
 			if (subscription_handler.is_subscribed_by_session_user(session)):
 			#
 				Link.set_store("servicemenu",
-				               Link.TYPE_RELATIVE,
+				               Link.TYPE_RELATIVE_URL,
 				               L10n.get("pas_http_subscription_unsubscribe"),
 				               { "m": "subscription", "s": "datalinker", "a": "unsubscribe", "dsd": subscription_dsd },
 				               icon = "mini-default-option",
@@ -137,7 +141,7 @@ Action for "list"
 			else:
 			#
 				Link.set_store("servicemenu",
-				               Link.TYPE_RELATIVE,
+				               Link.TYPE_RELATIVE_URL,
 				               L10n.get("pas_http_subscription_subscribe"),
 				               { "m": "subscription", "s": "datalinker", "a": "subscribe", "dsd": subscription_dsd },
 				               icon = "mini-default-option",
@@ -149,7 +153,7 @@ Action for "list"
 		if (_list.is_manageable()):
 		#
 			Link.set_store("servicemenu",
-			               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
+			               (Link.TYPE_RELATIVE_URL | Link.TYPE_JS_REQUIRED),
 			               L10n.get("pas_http_discuss_list_manage"),
 			               { "m": "discuss", "s": "list", "a": "manage", "dsd": { "dlid": lid } },
 			               icon = "mini-default-option",
@@ -157,7 +161,16 @@ Action for "list"
 			              )
 		#
 
-		list_data = _list.get_data_attributes("id", "id_main", "title", "time_sortable", "sub_entries", "hybrid_list", "description", "topics", "posts")
+		list_data = _list.get_data_attributes("id",
+		                                      "id_main",
+		                                      "title",
+		                                      "time_sortable",
+		                                      "sub_entries",
+		                                      "hybrid_list",
+		                                      "description",
+		                                      "topics",
+		                                      "posts"
+		                                     )
 
 		content = { "id": list_data['id'],
 		            "title": list_data['title'],
@@ -184,12 +197,37 @@ Action for "list"
 			                                  }
 
 			table = DataLinkerTable(_list)
-			table.add_column("entry", L10n.get("pas_http_discuss_list"), 30, sort_key = "title", renderer = entry_renderer_attributes)
-			table.add_column("total_topics", L10n.get("pas_http_discuss_topics"), 10, renderer = { "type": DataLinkerTable.COLUMN_RENDERER_SAFE_CONTENT, "css_text_align": "center" })
-			table.add_column("total_posts", L10n.get("pas_http_discuss_posts"), 10, renderer = { "type": DataLinkerTable.COLUMN_RENDERER_SAFE_CONTENT, "css_text_align": "center" })
-			table.add_column("latest_post", L10n.get("pas_http_discuss_latest_post"), 50, renderer = latest_post_renderer_attributes)
 
-			table.disable_sort("latest_post")
+			table.add_column("entry",
+			                 L10n.get("pas_http_discuss_list"),
+			                 30,
+			                 sort_key = "title",
+			                 renderer = entry_renderer_attributes
+			                )
+
+			table.add_column("total_topics",
+			                 L10n.get("pas_http_discuss_topics"),
+			                 10,
+			                 renderer = { "type": DataLinkerTable.COLUMN_RENDERER_SAFE_CONTENT,
+			                              "css_text_align": "center"
+			                            }
+			                )
+
+			table.add_column("total_posts",
+			                 L10n.get("pas_http_discuss_posts"),
+			                 10,
+			                 renderer = { "type": DataLinkerTable.COLUMN_RENDERER_SAFE_CONTENT,
+			                              "css_text_align": "center"
+			                            }
+			                )
+
+			table.add_column("latest_post",
+			                 L10n.get("pas_http_discuss_latest_post"),
+			                 50,
+			                 renderer = latest_post_renderer_attributes
+			                )
+
+			table.disable_sort("total_topics", "total_posts", "latest_post")
 			table.set_limit(15)
 
 			hookable_settings = HookableSettings("dNG.pas.http.discuss.List.getLimit",
@@ -198,13 +236,16 @@ Action for "list"
 
 			limit = hookable_settings.get("pas_http_discuss_list_limit", 20)
 
-			content['sub_entries'] = { "table": table }
+			content['sub_entries'] = { "object": table }
 
 			if (not is_hybrid_list):
 			#
 				content['sub_entries']['dsd_page_key'] = "dpage"
 				content['sub_entries']['page'] = page
 				table.set_limit(limit)
+
+				content['sub_entries']['dsd_sort_key'] = "dsort"
+				content['sub_entries']['sort_value'] = sort_value
 			#
 		#
 
@@ -224,15 +265,39 @@ Action for "list"
 			                                  }
 
 			table = DataLinkerTable(_list)
-			table.add_column("topic", L10n.get("pas_http_discuss_topic"), 40, sort_key = "title", renderer = topic_renderer_attributes)
-			table.add_column("posts", L10n.get("pas_http_discuss_posts"), 10, renderer = { "type": DataLinkerTable.COLUMN_RENDERER_SAFE_CONTENT, "css_text_align": "center" })
-			table.add_column("latest_post", L10n.get("pas_http_discuss_latest_post"), 50, renderer = latest_post_renderer_attributes)
 
-			table.disable_sort("latest_post")
+			table.add_column("topic",
+			                 L10n.get("pas_http_discuss_topic"),
+			                 40,
+			                 sort_key = "title",
+			                 renderer = topic_renderer_attributes
+			                )
+
+			table.add_column("posts",
+			                 L10n.get("pas_http_discuss_posts"),
+			                 10,
+			                 renderer = { "type": DataLinkerTable.COLUMN_RENDERER_SAFE_CONTENT,
+			                              "css_text_align": "center"
+			                            }
+			                )
+
+			table.add_column("latest_post",
+			                 L10n.get("pas_http_discuss_latest_post"),
+			                 50,
+			                 sort_key = "time_sortable",
+			                 renderer = latest_post_renderer_attributes
+			                )
+
 			table.set_limit(15)
+			table.set_sort_context("DiscussTopic")
 			table.set_source_callbacks(_list.get_topics, _list.get_topics_count)
 
-			content['topic_entries'] = { "table": table, "page": page, "dsd_page_key": "dpage" }
+			content['topic_entries'] = { "object": table,
+			                             "dsd_page_key": "dpage",
+			                             "page": page,
+			                             "dsd_sort_key": "dsort",
+			                             "sort_value": sort_value
+			                           }
 		#
 
 		list_parent = _list.load_parent()
@@ -244,7 +309,14 @@ Action for "list"
 		   ):
 		#
 			list_parent_data = list_parent.get_data_attributes("id", "id_main", "title")
-			if (list_parent_data['id'] != lid): content['parent'] = { "id": list_parent_data['id'], "main_id": list_parent_data['id_main'], "title": list_parent_data['title'] }
+
+			if (list_parent_data['id'] != lid):
+			#
+				content['parent'] = { "id": list_parent_data['id'],
+				                      "main_id": list_parent_data['id_main'],
+				                      "title": list_parent_data['title']
+				                    }
+			#
 		#
 
 		self.response.init(True)
@@ -257,11 +329,11 @@ Action for "list"
 
 		if (self.response.is_supported("html_canonical_url")):
 		#
-			parameters = { "__virtual__": "/discuss/view/list",
-			               "dsd": { "dlid": lid, "dpage": page }
-			             }
+			link_parameters = { "__virtual__": "/discuss/view/list",
+			                    "dsd": { "dlid": lid, "dpage": page, "dsort": sort_value }
+			                  }
 
-			self.response.set_html_canonical_url(Link().build_url(Link.TYPE_VIRTUAL_PATH, parameters))
+			self.response.set_html_canonical_url(Link().build_url(Link.TYPE_VIRTUAL_PATH, link_parameters))
 		#
 	#
 
@@ -281,7 +353,7 @@ Action for "post"
 		try: post = Post.load_id(pid)
 		except NothingMatchedException as handled_exception: raise TranslatableError("pas_http_discuss_pid_invalid", 404, _exception = handled_exception)
 
-		session = self.request.get_session()
+		session = (self.request.get_session() if (self.request.is_supported("session")) else None)
 		if (session is not None): post.set_permission_session(session)
 
 		if (not post.is_readable()):
@@ -293,19 +365,16 @@ Action for "post"
 		post_parent = post.load_main()
 		is_topic = isinstance(post_parent, Topic)
 
-		if (not isinstance(post_parent, DataLinker)): raise TranslatableError("pas_http_discuss_pid_invalid", 404)
-		elif (not post_parent.is_readable_for_session_user(session)):
-		#
-			if (session is None or session.get_user_profile() is None): raise TranslatableError("pas_http_discuss_pid_invalid", 404)
-			else: raise TranslatableError("core_access_denied", 403)
-		#
+		if (isinstance(post_parent, OwnableInstance)
+		    and (not post_parent.is_readable_for_session_user(session))
+		   ): raise TranslatableError("core_access_denied", 403)
 
 		if (self.response.is_supported("html_css_files")): self.response.add_theme_css_file("mini_default_sprite.min.css")
 
 		if (post.is_writable()):
 		#
 			Link.set_store("servicemenu",
-			               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
+			               (Link.TYPE_RELATIVE_URL | Link.TYPE_JS_REQUIRED),
 			               L10n.get("pas_http_discuss_post_edit"),
 			               { "m": "discuss", "s": "post", "a": "edit", "dsd": { "dpid": pid } },
 			               icon = "mini-default-option",
@@ -320,7 +389,7 @@ Action for "post"
 			if (post_parent.is_writable_for_session_user(session)):
 			#
 				Link.set_store("servicemenu",
-				               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
+				               (Link.TYPE_RELATIVE_URL | Link.TYPE_JS_REQUIRED),
 				               L10n.get("pas_http_discuss_post_reply"),
 				               { "m": "discuss", "s": "post", "a": "reply", "dsd": { "dpid": pid } },
 				               icon = "mini-default-option",
@@ -328,7 +397,7 @@ Action for "post"
 				              )
 
 				Link.set_store("servicemenu",
-				               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
+				               (Link.TYPE_RELATIVE_URL | Link.TYPE_JS_REQUIRED),
 				               L10n.get("pas_http_discuss_post_new"),
 				               { "m": "discuss", "s": "post", "a": "new", "dsd": { "dtid": tid } },
 				               icon = "mini-default-option",
@@ -343,7 +412,7 @@ Action for "post"
 				if (subscription_handler.is_subscribed_by_session_user(session)):
 				#
 					Link.set_store("servicemenu",
-					               Link.TYPE_RELATIVE,
+					               Link.TYPE_RELATIVE_URL,
 					               L10n.get("pas_http_discuss_topic_unsubscribe"),
 					               { "m": "discuss", "s": "topic_subscription", "a": "unsubscribe", "dsd": { "dtid": tid } },
 					               icon = "mini-default-option",
@@ -353,7 +422,7 @@ Action for "post"
 				else:
 				#
 					Link.set_store("servicemenu",
-					               Link.TYPE_RELATIVE,
+					               Link.TYPE_RELATIVE_URL,
 					               L10n.get("pas_http_discuss_topic_subscribe"),
 					               { "m": "discuss", "s": "topic_subscription", "a": "subscribe", "dsd": { "dtid": tid } },
 					               icon = "mini-default-option",
@@ -376,7 +445,7 @@ Action for "post"
 			                 )
 
 			Link.set_store("servicemenu",
-			               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
+			               (Link.TYPE_RELATIVE_URL | Link.TYPE_JS_REQUIRED),
 			               L10n.get("pas_http_discuss_topic_new"),
 			               { "m": "discuss", "s": "topic", "a": "new", "dsd": dsd_parameters },
 			               icon = "mini-default-option",
@@ -386,7 +455,7 @@ Action for "post"
 			if (is_list and topic_parent.is_manageable_for_session_user(session)):
 			#
 				Link.set_store("servicemenu",
-				               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
+				               (Link.TYPE_RELATIVE_URL | Link.TYPE_JS_REQUIRED),
 				               L10n.get("pas_http_discuss_list_manage"),
 				               { "m": "discuss", "s": "list", "a": "manage", "dsd": { "dlid": topic_parent_id } },
 				               icon = "mini-default-option",
@@ -407,10 +476,17 @@ Action for "post"
 		                                     "content"
 		                                    )
 
+		link_attributes = { "m": "discuss", "dsd": { "dpid": post_data['id'] } }
+
+		author_bar_data = { "id": post_data['author_id'],
+		                    "ip": post_data['author_ip'],
+		                    "time_published": post_data['time_published']
+		                  }
+
 		content = { "id": post_data['id'],
 		            "title": post_data['title'],
-		            "link": Link().build_url(Link.TYPE_RELATIVE, { "m": "discuss", "dsd": { "dpid": post_data['id'] } }),
-		            "author_bar": { "id": post_data['author_id'], "ip": post_data['author_ip'], "time_published": post_data['time_published'] },
+		            "link": Link().build_url(Link.TYPE_RELATIVE_URL, link_attributes),
+		            "author_bar": author_bar_data,
 		            "time_published": post_data['time_published'],
 		            "content": post_data['content'],
 		            "preserve_space": post_data['preserve_space']
@@ -457,10 +533,17 @@ Action for "post"
 		                  "time_published": topic_data['time_published']
 		                }
 
-		if (topic_data['time_published'] != topic_data['time_sortable']): topic_content['last_timestamp'] = topic_data['time_sortable']
+		if (topic_data['time_published'] != topic_data['time_sortable']):
+		#
+			topic_content['last_timestamp'] = topic_data['time_sortable']
+		#
 
 		if (topic_data['posts'] > 0): topic_content['posts'] = topic_data['posts']
-		if (topic_data['sub_entries'] > 0): topic_content['sub_entries'] = { "type": topic_data['sub_entries_type'], "id": topic_data['id'] }
+
+		if (topic_data['sub_entries'] > 0):
+		#
+			topic_content['sub_entries'] = { "type": topic_data['sub_entries_type'], "id": topic_data['id'] }
+		#
 
 		if (topic_parent is not None
 		    and ((not isinstance(topic_parent, OwnableInstance))
@@ -469,7 +552,11 @@ Action for "post"
 		   ):
 		#
 			topic_parent_data = topic_parent.get_data_attributes("id", "id_main", "title")
-			topic_content['parent'] = { "id": topic_parent_data['id'], "main_id": topic_parent_data['id_main'], "title": topic_parent_data['title'] }
+
+			topic_content['parent'] = { "id": topic_parent_data['id'],
+			                            "main_id": topic_parent_data['id_main'],
+			                            "title": topic_parent_data['title']
+			                          }
 		#
 
 		content['topic'] = topic_content
@@ -482,11 +569,11 @@ Action for "post"
 
 		if (self.response.is_supported("html_canonical_url")):
 		#
-			parameters = { "__virtual__": "/discuss/view/post",
-			               "dsd": { "dpid": pid }
-			             }
+			link_parameters = { "__virtual__": "/discuss/view/post",
+			                    "dsd": { "dpid": pid }
+			                  }
 
-			self.response.set_html_canonical_url(Link().build_url(Link.TYPE_VIRTUAL_PATH, parameters))
+			self.response.set_html_canonical_url(Link().build_url(Link.TYPE_VIRTUAL_PATH, link_parameters))
 		#
 
 		if (self.response.is_supported("html_page_description")
@@ -511,7 +598,7 @@ Action for "topic"
 		try: topic = Topic.load_id(tid)
 		except NothingMatchedException as handled_exception: raise TranslatableError("pas_http_discuss_tid_invalid", 404, _exception = handled_exception)
 
-		session = self.request.get_session()
+		session = (self.request.get_session() if (self.request.is_supported("session")) else None)
 		if (session is not None): topic.set_permission_session(session)
 
 		if (not topic.is_readable()):
@@ -525,7 +612,7 @@ Action for "topic"
 		if (topic.is_writable()):
 		#
 			Link.set_store("servicemenu",
-			               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
+			               (Link.TYPE_RELATIVE_URL | Link.TYPE_JS_REQUIRED),
 			               L10n.get("pas_http_discuss_post_new"),
 			               { "m": "discuss", "s": "post", "a": "new", "dsd": { "dtid": tid } },
 			               icon = "mini-default-option",
@@ -540,7 +627,7 @@ Action for "topic"
 			if (subscription_handler.is_subscribed_by_session_user(session)):
 			#
 				Link.set_store("servicemenu",
-				               Link.TYPE_RELATIVE,
+				               Link.TYPE_RELATIVE_URL,
 				               L10n.get("pas_http_discuss_topic_unsubscribe"),
 				               { "m": "discuss", "s": "topic_subscription", "a": "unsubscribe", "dsd": { "dtid": tid } },
 				               icon = "mini-default-option",
@@ -550,7 +637,7 @@ Action for "topic"
 			else:
 			#
 				Link.set_store("servicemenu",
-				               Link.TYPE_RELATIVE,
+				               Link.TYPE_RELATIVE_URL,
 				               L10n.get("pas_http_discuss_topic_subscribe"),
 				               { "m": "discuss", "s": "topic_subscription", "a": "subscribe", "dsd": { "dtid": tid } },
 				               icon = "mini-default-option",
@@ -562,27 +649,32 @@ Action for "topic"
 		topic_parent = topic.load_parent()
 		is_list = isinstance(topic_parent, List)
 
-		if (isinstance(topic_parent, OwnableInstance) and topic_parent.is_writable_for_session_user(session)):
+		if (isinstance(topic_parent, OwnableInstance)):
 		#
-			topic_parent_id = topic_parent.get_id()
+			if (not topic_parent.is_readable_for_session_user(session)): raise TranslatableError("core_access_denied", 403)
 
-			dsd_parameters = ({ "dlid": topic_parent_id }
-			                  if (is_list) else
-			                  { "doid": tid }
-			                 )
+			if (topic_parent.is_writable_for_session_user(session)):
+			#
+				topic_parent_id = topic_parent.get_id()
 
-			Link.set_store("servicemenu",
-			               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
-			               L10n.get("pas_http_discuss_topic_new"),
-			               { "m": "discuss", "s": "topic", "a": "new", "dsd": dsd_parameters },
-			               icon = "mini-default-option",
-			               priority = 3
-			              )
+				dsd_parameters = ({ "dlid": topic_parent_id }
+				                  if (is_list) else
+				                  { "doid": tid }
+				                 )
+
+				Link.set_store("servicemenu",
+				               (Link.TYPE_RELATIVE_URL | Link.TYPE_JS_REQUIRED),
+				               L10n.get("pas_http_discuss_topic_new"),
+				               { "m": "discuss", "s": "topic", "a": "new", "dsd": dsd_parameters },
+				               icon = "mini-default-option",
+				               priority = 3
+				              )
+			#
 
 			if (is_list and topic_parent.is_manageable_for_session_user(session)):
 			#
 				Link.set_store("servicemenu",
-				               (Link.TYPE_RELATIVE | Link.TYPE_JS_REQUIRED),
+				               (Link.TYPE_RELATIVE_URL | Link.TYPE_JS_REQUIRED),
 				               L10n.get("pas_http_discuss_list_manage"),
 				               { "m": "discuss", "s": "list", "a": "manage", "dsd": { "dlid": topic_parent_id } },
 				               icon = "mini-default-option",
@@ -613,9 +705,15 @@ Action for "topic"
 		            "post_entries": { "id": topic_data['id'], "main_id": topic_data['id_main'], "page": page }
 		          }
 
-		if (topic_data['time_published'] != topic_data['time_sortable']): content['last_timestamp'] = topic_data['time_sortable']
+		if (topic_data['time_published'] != topic_data['time_sortable']):
+		#
+			content['last_timestamp'] = topic_data['time_sortable']
+		#
 
-		if (topic_data['sub_entries'] > 0): content['sub_entries'] = { "type": topic_data['sub_entries_type'], "id": topic_data['id'] }
+		if (topic_data['sub_entries'] > 0):
+		#
+			content['sub_entries'] = { "type": topic_data['sub_entries_type'], "id": topic_data['id'] }
+		#
 
 		if (topic_parent is not None
 		    and ((not isinstance(topic_parent, OwnableInstance))
@@ -624,7 +722,11 @@ Action for "topic"
 		   ):
 		#
 			topic_parent_data = topic_parent.get_data_attributes("id", "id_main", "title")
-			content['parent'] = { "id": topic_parent_data['id'], "main_id": topic_parent_data['id_main'], "title": topic_parent_data['title'] }
+
+			content['parent'] = { "id": topic_parent_data['id'],
+			                      "main_id": topic_parent_data['id_main'],
+			                      "title": topic_parent_data['title']
+			                    }
 		#
 
 		self.response.init(True)
@@ -635,11 +737,11 @@ Action for "topic"
 
 		if (self.response.is_supported("html_canonical_url")):
 		#
-			parameters = { "__virtual__": "/discuss/view/topic",
-			               "dsd": { "dtid": tid, "dpage": page }
-			             }
+			link_parameters = { "__virtual__": "/discuss/view/topic",
+			                    "dsd": { "dtid": tid, "dpage": page }
+			                  }
 
-			self.response.set_html_canonical_url(Link().build_url(Link.TYPE_VIRTUAL_PATH, parameters))
+			self.response.set_html_canonical_url(Link().build_url(Link.TYPE_VIRTUAL_PATH, link_parameters))
 		#
 
 		if (self.response.is_supported("html_page_description")
